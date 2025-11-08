@@ -1,0 +1,63 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+### STAT 471: Programming Assignment 3 Solutions
+
+### Problem 1
+
+```{r}
+set.seed(42)
+
+n_samp = 10000
+x = runif(n_samp)
+mc_integrand = exp(-x)
+approx_mc = mean(mc_integrand)
+true_val = 1 - exp(-1)
+round(approx_mc, 4)
+round(true_val, 4)
+
+```
+The Monte Carlo integration approximation of the integral is relatively close to the true analytical value, accurate to two decimal places. This is pretty good as an approximation!
+
+<br>
+
+### Problem 2
+
+```{r}
+library(ISLR)
+library(rsample)
+auto_data = ISLR::Auto
+# head(auto_data)
+
+set.seed(42)
+
+samp_index = initial_split(auto_data, prop=0.90)
+
+train_auto = training(samp_index)
+test_auto = testing(samp_index)
+
+# Linear Regression Model
+
+lin_mod_auto = lm(mpg~horsepower, data=train_auto)
+
+summary(lin_mod_auto)
+AIC(lin_mod_auto)
+plot(lin_mod_auto)
+```
+Both the intercept and horsepower estimates have p-values less than the 0.05 significance level, hence we can keep them in the model. The AIC is 2122.987. A low R-squared of 0.5983 indicates that we can improve on model building. From the linear regression model, we can see that most of the residuals in the QQ plot are along the normal diagonal line, but tends to deviate on both extremes of the theoretical quantiles. The residuals versus fitted values plot show a quadratic trend, so a linear regression model may not be appropriate here.
+
+```{r}
+quad_mod_auto = lm(mpg~horsepower+I(horsepower^2), data=train_auto)
+
+summary(quad_mod_auto)
+AIC(quad_mod_auto)
+plot(quad_mod_auto)
+```
+
+Our quadratic model now has an improved R-squared of 0.6793 and our AIC has decreased to 2044.756. In addition, our residual plots show more straighter lines in the leverage plot and our residuals are more normally distributed from the QQ plot. Therefore we can conclude from these metrics and plots that the quadratic model is the best model to use for this dataset.
+
+
+
+<br>

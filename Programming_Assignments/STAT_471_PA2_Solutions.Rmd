@@ -1,0 +1,99 @@
+---
+title: "R Notebook"
+output:
+  html_document:
+    df_print: paged
+---
+
+### **Programming Assignment 2 Solutions**
+
+### Problem 1
+
+```{r}
+# (a)
+
+library(tidyverse)
+library(readr)
+
+imdb_data = read.csv("C:/Users/coryg/Downloads/imdb_top_1000.csv", header = TRUE)
+
+imdb_data = imdb_data %>% select(Series_Title, Released_Year, Runtime, Certificate, IMDB_Rating, Meta_score)
+
+nrow(imdb_data)
+head(imdb_data)
+```
+
+```{r}
+# (b) 
+
+imdb_new = imdb_data %>% filter(Released_Year >= 1985)
+
+nrow(imdb_new)
+head(imdb_new)
+```
+
+```{r}
+# (c)
+
+imdb_transmuted = imdb_new %>% transmute(cert_multicat = if_else(Certificate == "PG", 1, if_else(Certificate == "PG-13", 2, if_else(Certificate == "TV-14", 3, if_else(Certificate == "U", 4, 5)))))
+
+imdb_transmuted
+```
+
+<br>
+
+### Problem 2
+
+```{r}
+data(airquality)
+
+head(airquality)
+```
+
+```{r}
+# (a) 
+
+airquality$Day = factor(airquality$Day, levels = c(1:31), ordered = TRUE)
+
+airquality$Month = factor(airquality$Month, levels=5:9, labels=month.abb[5:9], ordered = TRUE)
+```
+
+```{r}
+# (b) 
+
+library(moments)
+
+ggplot(data=airquality) +
+  geom_histogram(mapping = aes(Ozone))
+
+skewness_ozone = skewness(airquality$Ozone, na.rm = TRUE)
+skewness_ozone
+```
+
+The tail is on the right side of the histogram and our skewness is 1.22. This indicates that we have a heavily right-skewed distribution.
+
+```{r}
+# (c)
+
+airquality$transformed_air = sqrt(airquality$Ozone)
+
+ggplot(data=airquality) +
+  geom_histogram(mapping = aes(transformed_air))
+
+new_skew = skewness(airquality$transformed_air, na.rm = TRUE)
+new_skew
+```
+
+After the transformation, the Ozone feature is now approximately normal since the skewness is now reduced to 0.51, an improvement from before.
+
+```{r}
+
+# (d)
+ggplot(data=airquality) +
+  geom_point(mapping = aes(x = Wind, y = transformed_air, color = Month))
+
+cor(airquality$transformed_air, airquality$Wind, use = "complete.obs")
+```
+
+The correlation coefficient is -0.59 and our scatterplot between Wind speed and the transformed ratio of Ozone presence is heading downwards. Therefore we conclude that there is a negative correlation/relationship between the two features.
+<br>

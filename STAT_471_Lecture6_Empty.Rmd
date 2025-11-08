@@ -1,0 +1,205 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+### Data Visualization
+
+After cleaning data and transforming it to fit your needs for analysis, there are many ways to visualize data based upon the types of features in your data, which variables are of interest to you, and what generalizations you would like to make from data. The big picture here is that data visualizations help us with data storytelling.
+
+We have actually seen some visualizations already in 471 such as the missing value tracker from data cleaning and the boxplot diagnostic from outlier detection. Now let's see more methods on visualizing data with the ggplot package within Tidyverse.
+
+<br>
+
+### Scatterplots
+
+Suppose we have some data, such as the mpg built-in dataset in R. Let's take a look at the data and get a glimpse of it.
+
+```{r}
+library(tidyverse)
+data(ggplot::mpg)
+head(mpg)
+```
+
+What is the relationship between displ (a car's engine size) and hwy (the highway mpg)? To do a preliminary check, let's plot a scatterplot using ggplot.
+
+```{r}
+ggplot(data = mpg) +
+  geom_point(mapping = aes(x = displ, y = hwy))
+```
+
+It seems like there's a strong, negative relationship between the displ and hwy features of the mpg dataset. This implies that cars with bigger engines use more fuel on highways, which is intuitive to us.
+
+Using each function after ggplot() as we have done before and in this example is called a "layer" of your visualization. So you can add multiple layers to modify what your plot looks like. Here, geom_point() plots the data as points on a coordinate plane with aes() specifying your axes represented by your features.
+
+Now this is already useful, but a deeper analysis will also ask the question: Knowing that we have different classes of cars, how do we know which classes represent which data points visually? A preliminary check can be done by adding a third parameter to the geom_point() function, color. 
+
+```{r}
+ggplot(data = mpg) +
+  geom_point(mapping = aes(x = displ, y = hwy, color = class))
+```
+
+Now this is even more insightful. The cluster of points that are straying away from our plot on the right are from the 2 seater car class, highlighted by the salmon color. We can observe the other clusters as well and that midsize and SUV vehicles are the most dense by inspection.
+
+Another thing to note is that you can change the size of the points by using the size parameter (dependent on the density of points), shape using the shape parameter, and transparency using the alpha parameter.
+
+```{r}
+ggplot(data = mpg) +
+  geom_point(mapping = aes(x = displ, y = hwy, size = class))
+```
+
+```{r}
+ggplot(data = mpg) +
+  geom_point(mapping = aes(x = displ, y = hwy, shape = class))
+```
+
+```{r}
+ggplot(data = mpg) +
+  geom_point(mapping = aes(x = displ, y = hwy, alpha = class))
+```
+
+To change the color of our scatterplot, you can use the color parameter and assign it to a specific color.
+
+```{r}
+ggplot(data = mpg) +
+  geom_point(mapping = aes(x = displ, y = hwy), color = 'blue')
+```
+
+Sometimes it's also helpful to split the scatterplot into separate scatterplots by each of your categories. This technique is called faceting and can be achieved using facet_wrap(). This gives you insight specifically on the density of each class.
+
+We use ~ to specify formulas in R. In regression analysis, we'll see how to use formulas to tell R how we want to organize our regression models from a symbolic representation to code representation. Another way to interpret this is "split by data by class and use two rows to do this".
+
+```{r}
+ggplot(data = mpg) +
+  geom_point(mapping = aes(x = displ, y = hwy)) + facet_wrap(~class, nrow = 2)
+```
+
+To see the general trend of the correlation between displ and hwy, we can use geom_smooth() to fits a Loess curve that represents the conditioned mean between the points. If you are interested in the theory of Loess regression, a non-parametric technique, STAT 560 covers this and other different types of non-parametric regression methods.
+
+```{r}
+ggplot(data = mpg) +
+  geom_point(mapping = aes(x = displ, y = hwy)) +
+  geom_smooth(mapping = aes(x = displ, y = hwy))
+```
+The shaded area is the 95% confidence band of the Loess curve. In summary, it is similar to confidence intervals except that confidence intervals are for single parameter estimates, while confidence bands are used for the entire range of values of an estimated curve. The level parameter within geom_smooth() controls the confidence level for your confidence band.
+
+You can even modify the geom_smooth argument using the filter() to fit the Loess curve with respect to categorical features. For example, a scatterplot with a Loess regression curve that tracks the conditioned mean of the subcompact vehicle class looks like this:
+
+```{r}
+library(tidyverse)
+
+ggplot(data = mpg, mapping = aes(x = displ, y = hwy)) +
+  geom_point(mapping = aes(color = class)) + 
+  geom_smooth(data = filter(mpg, class == "subcompact"), se = FALSE)
+```
+The key here is to use filter() to use only rows from the mpg dataset that are classified under the "subcompact" category. Here, se is the parameter that determines if you want to display the confidence bands around the estimated curve or not. 
+
+<br>
+
+### Bar Charts and Histograms
+
+Bar charts can be used to summarize categorical variables and histograms can be used to summarize information about quantitative variables. Respectively, you would use geom_bar() and geom_histogram().
+
+```{r}
+# Bar chart (Frequency)
+
+ggplot(data = mpg) +
+  geom_bar(mapping = aes(x = class))
+
+```
+```{r}
+ggplot(data = mpg) +
+  geom_bar(mapping = aes(x = class, fill = class))
+```
+
+Now to get a relative frequency bar chart, you can specify the y-axis to calculate the proportion using after_stat(). 
+
+```{r}
+ggplot(data = mpg) +
+  geom_bar(mapping = aes(x = class, y = after_stat(prop), group = 1))
+```
+
+```{r}
+# Histogram
+
+ggplot(data = mpg) +
+  geom_histogram(mapping = aes(x = hwy),
+                 binwidth = 5)
+```
+The binwidth parameter can be used to change the size of bins.
+
+<br>
+
+### Boxplots
+
+We have seen boxplots before when doing outlier detection. One thing that can be pointed out this time is that we can change the orientation of boxplots to better visualize data in case we have many features or categories to consider. We'll use geom_boxplot() to create boxplots and coord_flip() to flip the axes.
+
+```{r}
+ggplot(data = mpg, mapping = aes(x = class, y = hwy)) +
+  geom_boxplot()
+```
+```{r}
+ggplot(data = mpg, mapping = aes(x = class, y = hwy)) +
+  geom_boxplot() +
+  coord_flip()
+```
+
+### Scatterplot Matrices
+
+Now we can also create what's called a scatterplot matrix to see an even bigger picture of our data. In essence, we create scatterplots between each pair of features to visually see any correlations between features in our data.This is a great way to detect multicollinearity, a phenomenon that occurs when two or more features are highly correlated with each other. This means that we won't be able to see the inidividual impact each feature has on the response feature of interest. (More on this in regression analysis). 
+
+To create a scatterplot matrix, we use the function pairs() in base R. As an example, let's create a scatterplot matrix of the iris dataset.
+
+```{r}
+data(iris)
+pairs(iris[, 1:4], pch = 19)
+```
+
+Note that in the scatterplot matrix that they are symmetrical and square, so the top right triangular panel displays the same pairs of correlation scatterplots as the bottom left triangular panel. If you want only the top right panel, then you can specify the parameter lower.panel to be NULL.
+
+```{r}
+pairs(iris[, 1:4], pch = 19, lower.panel = NULL)
+```
+
+Note that there are 3 species we can classify from this dataset, so similar to how we did the scatterplots above, we can color-code our scatterplot matrix correlations by species using different colors.
+
+We'll need to establish a vector of colors first. Blue will represent setosa, yellow will represent versicolor, and red will represent virginica.
+
+```{r}
+my_cols = c("blue", "yellow", "red")
+pairs(iris[, 1:4], pch = 19, cex = 0.5,
+      col = my_cols[iris$Species],
+      lower.panel = NULL)
+```
+
+The best part is that we can modify our visualization of the correlations by writing our own custom function. For example, what if we wanted to keep the lower triangular panels but display the corresponding correlation coefficient to each scatterplot? We can do so by doing the following:
+
+```{r}
+# Correlation panel
+
+panel.cor = function(x, y) {
+  usr = par("usr"); on.exit(par(usr))
+  par(usr = c(0, 1, 0, 1))
+  r = round(cor(x, y), 2)
+  txt = paste0("R =", r)
+  cex.cor = 0.8/strwidth(txt)
+  text(0.5, 0.5, txt, cex = cex.cor*r)
+}
+
+upper.panel = function(x, y) {
+  points(x, y, pch = 19, col = my_cols[iris$Species])
+}
+
+pairs(iris[, 1:4],
+      lower.panel = panel.cor,
+      upper.panel = upper.panel)
+```
+
+We can also use a heatmap to show correlations between numeric features visually by color. Lighter colors show us the highest correlations
+and darker colors show us the lowest correlations.  
+
+```{r}
+
+```
+
+<br>

@@ -1,0 +1,323 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+### **Importing Data and Data Cleaning**
+
+This week's lecture will be further building upon your R knowledge by showing you with examples on how to import different types of files. In addition, we will apply some data cleaning techniques as most of the work in the data analysis/science industry prior to analysis and model development is cleaning your data. Mainly here we introduce techniques for missing data via imputation methods, outlier detection, and handling duplicate data.
+
+<br>
+
+### Importing Data
+
+We learned in the past few weeks that we can import built-in datasets in R by uing the data() function.
+
+```{r}
+data(iris)
+iris_data = iris
+head(iris)
+```
+
+However, all types of data can also come from external sources such as Kaggle, UCI machine Learning Repository, and from the internet. 
+
+We will be using the readr function to read in data and import them into R. Note that you'll need to install the package using install.packages() prior to using readr.
+
+```{r}
+# install.packages("readr")
+# intall.packages("readxl")
+library(readr)
+library(readxl)
+```
+
+readr and readxl can read in different type of files. Most of the time, you'll be importing Excel files (.xlsx) and Comma Separated Values (.csv) files.
+
+Two of these files are provided on Canvas for you to practice with.
+
+### Importing Excel Files
+
+As an example, let's import the 2025 Harmonized Tariff Schedule from data.gov. You can download the Excel data from Canvas. Please take note of the directory path of where your file gets downloaded to. You'll need it to specify this path in the read_excel() function to read in your data.
+
+```{r}
+tariff_data = read_excel("C:/Users/coryg/Downloads/hts_2025_revision_21_xls.xlsx")
+head(tariff_data)
+```
+
+<br>
+
+### Importing CSV Files
+
+For an example, let's take a look at some credit card data pulled from Kaggle, a popular data analysis and data science dataset hub. The data is provided on Canvas for your convenience. Here for csv files, we'll be using read.csv().
+
+```{r}
+credit_data = read.csv("C:/Users/coryg/Downloads/creditdata/creditcard.csv", header=TRUE)
+head(credit_data)
+```
+
+Note that since we have feature names and we want read.csv to recognize the first row, we need to set the argument "header=TRUE".
+
+<br>
+
+### Reading Text Files
+
+You can also read-in text data. To read in this type of data, ue read.table if it isn't separated by a delimiter such as "," or ";".
+
+```{r}
+textbooks = read.table("C:/Users/coryg/OneDrive/Desktop/datasets_Stat_510/CH01PR20.txt")
+head(textbooks)
+```
+
+<br>
+
+### Data Cleaning
+
+### Mean/Median Imputation
+
+These are the two most basic types of imputation methods to fill in missing data values for continuous features. Mean imputation is used for features/columns that are normally distributed while median imputation is used for skewed distributions. Here we show both methods.
+
+### Fixing Datatypes
+
+One part of data cleaning that often comes up is to ensure that datatypes are consistent with their features. For example, we import the Punjab data and see that our district incomes in dollars should be continuous numerics, not characters. The values having commas are the issue, so we'll use the Tidyverse dplyr package to help us clean the dataframe. We will first change them prior to imputing the missing values using as.numeric(). For categorical variables, use as.factor().
+
+```{r}
+punjab_data = read.csv("C:/Users/coryg/Downloads/Punjab.csv", header=TRUE)
+head(punjab_data)
+```
+
+```{r}
+# Continuous feature conversion to numeric
+
+# install.packages("dplyr")
+library(dplyr)
+
+punjab_data = punjab_data %>%
+  mutate(across(3:22, ~as.numeric(gsub(",", "", .))))
+
+head(punjab_data)
+```
+
+```{r}
+# Mean Imputation
+
+mean_barnala = mean(punjab_data$Barnala)
+mean_barnala
+
+punjab_data$Barnala[is.na(punjab_data$Barnala)] = mean(punjab_data$Barnala, na.rm = TRUE)
+
+head(punjab_data$Barnala)
+```
+
+The mean is 2310.361, so you can see that the code above filled in the missing values with that value. Below, we do the median imputation method.
+
+```{r}
+# Median Imputation
+
+punjab_data$Taran.Tarn[is.na(punjab_data$Taran.Tarn)] = median(punjab_data$Taran.Tarn, na.rm = TRUE)
+
+head(punjab_data)
+```
+
+### Using MICE for Missing Values
+
+MICE (Multivariate Imputation by Chained Equations) is a handy package that can handle different type of missing data by implementing the "best match" for the possible missing values. The algorithm in this package can impute a mix of both continuous and categorical data. We won't go too much into theory here, but we'll know how to utilize this package and what it does. 
+
+Here, let's use the Punjab socioeconomic dataset as an example.
+
+```{r}
+# install.packages("mice")
+library(tidyverse)
+library(mice)
+
+set.seed(42)
+```
+Observe that we have missing values labeled as "NA" in the Barnala feature column when using head().
+
+We now want to visualize all potential missing values. 
+
+```{r}
+missing_col = punjab_data %>% is.na %>%
+  as_data_frame %>% mutate(row_number=1:nrow(.)) %>% gather(variable, is_missing, -row_number)
+
+ggplot(missing_col, aes(x = variable, y = row_number, fill=is_missing)) +
+  geom_tile() +
+  theme_minimal() +
+  scale_fill_grey(name="",
+                  labels=c("Present", "Missing")) +
+  theme(axis.text.x = element_text(angle=45, vjust=0.5, size=8)) +
+  labs(x = "variables in dataset",
+       y = "observations")
+```
+
+This visualization tells us that there are missing values in the Sahibzada Ajit Singh column and the rows of where these missing values are is listed in the graphic. Let's use MICE to clean up and impute the missing values.
+
+```{r}
+empty_model = mice(punjab_data, maxit=0)
+method = empty_model$method
+predictorMatrix = empty_model$predictorMatrix
+
+imputed_data = mice(punjab_data, method, predictorMatrix, m=5)
+
+imputed_data = complete(imputed_data)
+
+head(imputed_data)
+```
+
+Now let's double check to see if those missing value were cleaned.
+```{r}
+missing_by_column <- imputed_data %>% 
+    is.na %>% 
+    as_data_frame %>% 
+    mutate(row_number = 1:nrow(.)) %>% 
+    gather(variable, is_missing, -row_number)
+
+ggplot(missing_by_column, aes(x = variable, y = row_number, fill = is_missing)) +
+    geom_tile() + 
+    theme_minimal() +
+    scale_fill_grey(name = "",
+                    labels = c("Present","Missing")) +
+    theme(axis.text.x  = element_text(angle=45, vjust=0.5, size = 8)) + 
+    labs(x = "Variables in Dataset",
+         y = "Rows / observations")
+```
+And we can see this dataset is now clean, no missing values!
+
+Other times, if the dataset you're dealing with is large enough, you can drop rows with NA's. However, the more data you have, the more robust your analysis is. This is a last resort if imputation methods aren't working for you.
+
+<br>
+
+### Outlier Detection
+
+Outliers are extreme values within your dataset. They appear either from errors in data entry or due to unforeseen variation in the population you're looking at. Here, we will visualize and identify outliers via the Boxplot.
+
+```{r}
+ggplot(imputed_data, aes(x="dollars", y= Barnala)) + geom_boxplot()
+```
+Now we see the outliers in the Barnala district. We can do this for all districts (all features in our dataset).
+
+```{r}
+library(ggplot2)
+library(tidyr)
+library(dplyr)
+
+# Reshape from wide (districts in columns) to long
+punjab_long <- imputed_data %>%
+  pivot_longer(cols = 3:22, names_to = "District", values_to = "Value")
+
+# Plot boxplots by district
+ggplot(punjab_long, aes(x = District, y = Value)) +
+  geom_boxplot(fill = "skyblue", outlier.color = "red", outlier.shape = 8) +
+  labs(title = "Boxplots of District Values (Columns 3–22)",
+       x = "District",
+       y = "Value") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+### Method 1: Interquartile Range (IQR)
+
+```{r}
+x = imputed_data$Barnala
+Q1 = quantile(x, 0.25, na.rm = TRUE)
+Q3 = quantile(x, 0.75, na.rm = TRUE)
+IQR = Q3 - Q1
+
+outliers = x < (Q1 - 1.5*IQR) | x > (Q3 + 1.5*IQR)
+imputed_data[outliers, ]
+```
+
+The code below uses conditional logical values to flag which rows are outliers. We'll see the outlier removal process later.
+```{r}
+outlier_flags <- sapply(imputed_data[3:22], function(col) {
+  Q1 <- quantile(col, 0.25, na.rm = TRUE)
+  Q3 <- quantile(col, 0.75, na.rm = TRUE)
+  IQR <- Q3 - Q1
+  col < (Q1 - 1.5*IQR) | col > (Q3 + 1.5*IQR)
+})
+outlier_flags
+```
+
+### Method 2: Z-Scores
+
+This method will report outliers depending on the z-score threshold you set. Try playing around with the 1.25 threshold. How does this affect the detection of outliers?
+
+```{r}
+z_scores = scale(imputed_data$Barnala)
+outliers = abs(z_scores) > 1.25
+imputed_data[outliers, ]
+```
+### What To Do With Outliers
+
+Suppose in the Punjab data that rows 7, 11, 12, and 13 are outliers for the Barnala feature. To deal with these outliers, there are 2 options you have:
+
+- Cap the outliers to the 5th-95th percentile.
+- Use an imputation method (mean or median) to adjust the value of the outlier.
+- Drop the outliers using IQR or Z-score thresholds.
+
+Capping outliers at certain thresholds allows for the replacement of outliers and is an alternative to completely dropping your outliers. 
+
+```{r}
+# Capping outliers
+
+punjab_capped = imputed_data %>%
+  mutate(across(3:22, ~pmin(pmax(., quantile(., 0.05, na.rm=TRUE)),
+                            quantile(., 0.95, na.rm=TRUE))))
+```
+
+For dropping outliers, we can use either IQR or Z-scores to drop outliers. 
+
+```{r}
+# IQR
+
+punjab_no_out = imputed_data %>%
+  filter(if_all(3:22, ~ {
+    Q1 = quantile(.x, 0.25, na.rm=TRUE)
+    Q3 = quantile(.x, 0.75, na.rm=TRUE)
+    IQR = Q3 - Q1
+    .x >= (Q1 - 1.5*IQR) & .x <= (Q3 + 1.5*IQR)
+  }))
+head(punjab_no_out, 20)
+```
+
+```{r}
+# Z-score
+
+punjab_no_out2 = imputed_data %>% 
+  filter(if_all(3:22, ~abs(scale(.x)) <= 1.25))
+
+head(punjab_no_out2, 20)
+```
+
+### Dropping Duplicates
+
+Another helpful thing to consider in data cleaning is detecting and dropping duplicates. As an example, the code below will generate duplicate data in the Punjab dataset.
+
+```{r}
+punjab_dup = bind_rows(imputed_data, 
+                       imputed_data[c(3, 7), ])
+head(punjab_dup, 20)
+```
+
+Now for the cleaning...
+
+```{r}
+# Counting how many duplicate rows exist
+
+duplicates_num = sum(duplicated(punjab_dup))
+duplicates_num
+
+# Viewing the duplicate rows
+
+punjab_dup[duplicated(punjab_dup), ]
+
+# Dropping duplicates
+
+punjab_data_nodup = punjab_dup %>% distinct()
+```
+
+We duplicated two rows (3 and 7) which turned out to be rows 14 and 15 as the actual duplicates. Now after dropping, our data has no duplicates.
+
+```{r}
+head(punjab_data_nodup, 20)
+```
+
+<br>
+

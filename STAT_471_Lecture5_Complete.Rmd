@@ -1,0 +1,266 @@
+---
+title: "R Notebook"
+output:
+  html_document:
+    df_print: paged
+---
+
+### **Data Transformation and Manipulation**
+
+So far in this course, we have covered the basics in working with datasets in R, both built-in and custom imports. We have also learned about some fundamental algorithms that play a role in data science applications. This week, we will focus on honing your skills in manipulating data and transforming it to fit your needs.
+
+Emphasis will be placed on using dplyr from the Tidyverse package.The first few data transformation examples will be done using the nycflights13 built-in dataset.
+
+```{r}
+library(tidyverse)
+library(nycflights13)
+```
+
+### Filtering
+
+We can filter data observations using the dplyr package's filter() function. Usually we filter by a criterion that we can customize and define. 
+
+```{r}
+jan1 = filter(flights, month==1, day==1)
+jan1
+```
+
+The above code filters the data such that it returns all flights that were on January 1. Now how about all flights that occurred in November or December?
+
+```{r}
+nov_dec = filter(flights, month %in% c(11, 12))
+nov_dec
+```
+
+Filtering works faster than dropping rows manually by only returning the observations that satisfy your conditional requirement. Now to find all flights that were not delayed by no more than two hours (delay is measured in minutes here)...
+
+```{r}
+no_delay = filter(flights, arr_delay <= 120, dep_delay <= 120)
+no_delay
+```
+
+### Arranging
+
+```{r}
+descending_delay = arrange(flights, desc(dep_delay))
+descending_delay
+```
+
+Now let's try ascending order by arrival delay time. 
+
+```{r}
+arr_ascend = arrange(flights, -desc(arr_delay))
+arr_ascend
+```
+
+### Data Retrieval
+
+We can retrieve certain columns of data with the select() function from dplyr. 
+
+```{r}
+select(flights, dep_time, sched_dep_time)
+```
+
+Let's try retrieving columns features that don't contain the string "time" in the name. You can also similarly switch this up with starts_with() and ends_with(). 
+
+```{r}
+select(flights, !contains("time"))
+```
+
+We can move certain variables to the front with the select() function and using the everything() function last.
+
+```{r}
+select(flights, time_hour, air_time, everything())
+```
+
+### Variable Creation and Modification
+
+We can create new variables and modify values in them using mutate(). You can use conditional statements and even use other built-in functions to specify how you want to transform variables. We've seen this before when performing data cleaning last week, and we'll see it applied later again.
+
+Let's create a new variable in nycflights13 where we calculate the speed of each of the delayed flights. We'll need to use select() first.
+
+```{r}
+flights_sml = select(flights,
+                     year:day,
+                     ends_with("delay"),
+                     distance,
+                     air_time)
+mutate(flights_sml, speed = distance / air_time * 60)
+```
+
+transmute() can be used to omit all variables except the ones you've created in the tibble/dataframe.
+
+```{r}
+transmute(flights_sml, speed = distance/ air_time * 60)
+```
+
+### Grouping and Summarizing
+
+group_by() can be used to group your data by certain columns. na.rm is the default R parameter that omits NA values if there are any. We can use this parameter (just like last week) since aggregate functions built into R will return NA values as output if the input is also NA. Thus na.rm is a useful parameter when cleaning and transforming your data.
+
+```{r}
+by_day = group_by(flights, year, month, day)
+summarize(by_day, delay = mean(dep_delay, na.rm = TRUE))
+```
+
+So this is what happens when we use mean() and no na.rm parameter.
+
+```{r}
+by_day = group_by(flights, year, month, day)
+summarize(by_day, delay = mean(dep_delay))
+```
+
+### One-Hot Encoding: The Binary Side
+
+Last week, we didn't touch the categorical variables for a reason. This week, we will use our knowledge of dplyr to transform our data by employing one-hot encoding. This idea focuses on the premise of creating a new object and assigning corresponding numerical values to the original values. This is commonly done in preparation prior to data analysis and machine learning model implementation. Here, we'll consider a categorical variable with two classes, which is a binary variable.
+
+Let's take a look at the housing.csv dataset (provided in Canvas).
+
+```{r}
+library(readr)
+library(tidyverse)
+
+housing_data = read.csv("C:/Users/coryg/Downloads/Housing.csv", header=TRUE)
+
+head(housing_data)
+```
+
+Using the dplyr package within Tidyverse, we can use the mutate() function and if_else().
+
+```{r}
+new_housing = housing_data %>%
+  mutate(mainroad_binary = if_else(mainroad == "yes", 1, 0))
+
+new_housing = new_housing %>%
+  mutate(guestroom_binary = if_else(guestroom == "yes", 1, 0))
+
+new_housing = new_housing %>%
+  mutate(basement_binary = if_else(basement == "yes", 1, 0))
+
+new_housing = new_housing %>%
+  mutate(water_binary = if_else(hotwaterheating == "yes", 1, 0))
+
+head(new_housing)
+```
+
+This technique is useful especially for preparing data prior to building and fitting binary response models for classification tasks. In particular, logistic regression.
+
+### One-Hot Encoding: The Multiclass Case
+
+Now, we can apply this same structure for multiclass categorical variables by embedding the if_else() function recursively in the current "else" condition. Let's use the housing.csv dataset as an example but for the furnishings categories. 
+
+```{r}
+housing_furn = new_housing %>%
+  mutate(furnishing_multinom = if_else(furnishingstatus == "furnished", 1, if_else(furnishingstatus == "semi-furnished", 2, 3)))
+
+head(housing_furn)
+```
+
+Note that we used another if_else() inside of the first if_else() statement to handle the 3 categories within the furnishingstatus variable. This allows for multiple categorical values to be "chained" and easily transformed.
+
+This technique is good for preparing data prior to multinomial (equivalently known as multiclass) model fitting such as for classification with Feed-Forward Neural Networks (FNN's) for example.
+
+There are many ways to transform data using dplyr and other useful R packages, and in fact, we'll see similar logic return when we learn about SQL and databases in the near future. But what happens when our data that we inspect doesn't meet our expectations (i.e. what if we have skewed data that isn't quite normally distributed?). This may throw a wrench when performing statistical procedures such as hypothesis testing and fitting generalized linear models (glm's). So let's see our options here.
+
+### Functional Data Transformations
+
+We have seen numerous techniques on data transformations on dataframes by manipulating rows and columns. Now we consider functional transformations of continuous data. Often times, our data can be transformed using elementary mathematical functions. Note that functional transformations won't always be perfect, and may even not always be successful. Although it is a nice skill to have in your repertoire. 
+
+We usually use these types of transformations to achieve one or more of the following:\
+- reduce skewness in distributions \
+- stabilize variance \
+- make relationships more linear, where errors  follow a normal distribution (we'll see this play a role in the future when we cover regression analysis).\
+
+Consider the following simulated data. 
+
+
+```{r}
+set.seed(42)
+
+x = runif(30, min=0, max=10)
+y = x^2 + 1
+y = y + rnorm(length(x), mean = 0, sd = 5)
+
+sim_data = data.frame(x, y)
+
+plot(sim_data$x, sim_data$y, col="blue", main = "Simulated Data", 
+     xlab= "x", ylab = "y", pch = 19)
+```
+
+Clearly, this is a random sample of points from a quadratic function, mainly x^2 + 1. But what happens if we perform a log transformation on this data?
+
+```{r}
+y = log10(y)
+
+sim_data = data.frame(x, y)
+
+plot(sim_data$x, sim_data$y, col="blue", main = "Simulated Data", 
+     xlab= "x", ylab = "y", pch = 19)
+```
+And now we have the data looking more approximately linear. This is the beauty of functional transformations, as they can significantly help in making your nonlinear data more linear.
+
+Here are a few transformations that may be helpful for different types of skewed data you may encounter:\
+
+Moderate skew: \
+- sqrt(x) for positively (right) skewed data \
+- sqrt(max(x+1) - x) for negatively (left) skewed data \
+
+Strong skew: \
+- log10(x) for positively skewed data \
+- log10(max(x+1) - x) for negatively skewed data \
+
+Inverse skew: \
+- 1/x for positively skewed data \
+- 1/(max(x+1) - x) for negatively skewed data \
+
+Sometimes, we'll use log(x) to handle linearity and heteroscedasticity (high, non-constant variation in your data; more on this later when we do regression analysis).
+
+As an example, we'll be looking at the USJudgeRatings dataset.
+
+```{r}
+# install.packages("moments")
+library(tidyverse)
+library(moments)
+```
+
+```{r}
+data("USJudgeRatings")
+df = USJudgeRatings
+head(df)
+```
+
+In this example, let's consider the CONT variable, the number of contacts between the judge and lawyers. Let's check the skewness of this variable first using skewness().
+
+```{r}
+cont_skew = skewness(df$CONT, na.rm = TRUE)
+cont_skew
+```
+
+Now let's check the density of the distribution. We'll be doing more of this when we go over data visualizations and EDA next week.
+
+```{r}
+x = USJudgeRatings$CONT
+data = data.frame(CONT = x)
+mu = mean(x)
+sigma = sd(x)
+ggplot(data, aes(CONT)) +
+  geom_density(fill = "lightgray", alpha = 0.5) + stat_function(fun = dnorm, args = list(mean = mu, sd = sigma), color = "red", size=1) +
+  labs(title = "Density of CONT with Normal Curve", x = "CONT", y = "Density") +
+  theme_minimal()
+```
+Seems like we'll need to use a log10 transformation. 
+
+```{r}
+df$CONT = log10(df$CONT)
+x = df$CONT
+data = data.frame(CONT = x)
+mu = mean(x)
+sigma = sd(x)
+ggplot(data, aes(CONT)) +
+  geom_density(fill = "lightgray", alpha = 0.5) + stat_function(fun = dnorm, args = list(mean = mu, sd = sigma), color = "red", size=1) +
+  labs(title = "Density of CONT with Normal Curve", x = "CONT", y = "Density") +
+  theme_minimal()
+```
+And we see that our data has been transformed to fit better with the normal distribution (the superimposed red line). While it's not perfect, it's a massive improvement if you compare this density with the original density of CONT.
+
+<br>

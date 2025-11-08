@@ -1,0 +1,200 @@
+---
+title: "R Notebook"
+output:
+  html_document:
+    df_print: paged
+---
+
+### **Bisection and Newton-Raphson Algorithms**
+
+<br>
+
+The past couple of weeks have taught us the basics of programming in R and how to write for loops, while loops, and functions. We now take a step further and apply the theory we know to a couple of algorithms that play a role in the field of computational statistics.
+
+### Bisection Algorithm
+
+- Can be used to find the roots of functions.
+- Will recursively split an interval by half until the root is found.
+
+General Algorithm
+```{r}
+bisection_alg = function(f, a, b, tol, max_iter) {
+  if (f(a) * f(b) >= 0) {
+    stop("Function has no opposite endpoints")
+  }
+  iter = 0
+  while ((b-a) / 2 > tol && iter < max_iter) {
+    c = (a+b) / 2
+    if (f(c) == 0) {
+      return(c)
+    }
+    else if (f(a) * f(c) < 0) {
+      b = c
+    }
+    else{
+      a = c
+    }
+    iter = iter + 1
+  }
+  return((a+b) / 2)
+}
+```
+
+### Example 1
+```{r}
+f = function(x) x^3 - x - 2
+bisection_alg(f, 1, 2, 1e-7, 100)
+```
+<br>
+
+### Newton-Raphson Algorithm
+
+- Can also find the roots of functions
+- Uses the best linear approximation to the function, made possible by the Mean Value Theorem from Calculus.
+
+General Algorithm
+```{r}
+newton_alg = function(fun, funpr, x0, tol, iter) {
+  x = x0
+  for (i in 1:iter) {
+    f_x = fun(x)
+    fp_x = funpr(x)
+    if (fp_x == 0) {
+      stop("Derivative is zero")
+    }
+    x_new = x - (f_x / fp_x)
+    if (abs(x_new-x) < tol) {
+      return(list(root = x_new, iterations = i))
+    }
+    x = x_new
+  }
+  stop("Algorithm has reached max iterations")
+}
+```
+
+Here, x0 is our initial guess, iter is the maximum number of iterations, tol is our tolerance that controls the precision of our answer, and fun and funpr is the target function and its derivative respectively. 
+
+<br> 
+
+### Example 1
+
+Let's look at a simple quadratic function, say f(x) = x^2 - 2 with initial guess x0=1. We define the target function and its derivative,  then call the Newton-Raphson algorithm.
+
+The below code uses curve() to plot a function along an interval of your choice. abline() graphs a dashed line at y=0 to visually show where the roots are. This will give you a clue on what your initial guess should be! 
+
+```{r}
+f = function(x) x^2 - 2
+curve(f, from= -3, to= 3, col = "blue",
+      lwd=2, xlab = "x", ylab= "f(x)", main = "Graph of f(x)=x^2 - 2")
+abline(h = 0, col="red", lty=2)
+```
+
+```{r}
+fprime = function(x) 2*x
+newton_alg(f, fprime, x0=1, 1e-7, 100)
+```
+
+### Example 2
+
+For this example, if we do a preliminary graph of our function, our root lies in the interval [0,1]. Hence a good initial guess here is 0.5 for x0.
+
+```{r}
+f = function(x) x^3 - x - 2
+fprime = function(x) 3*x^2 - 1
+
+curve(f, from= 0, to= 1, col = "blue",
+      lwd=2, xlab = "x", ylab= "f(x)", main = "Graph of f(x)=x^3 - x - 2")
+abline(h = 0, col="red", lty=2)
+```
+
+```{r}
+newton_alg(f, fprime, 0.5, 1e-7, 100)
+```
+
+<br>
+
+### Newton-Raphson Algorithm to Find MLE's
+
+- Sometimes, MLE's can be hard to find if the maximization process has no closed form solution
+- Idea: Apply the Newton-Raphson algorithm to find the best approximation to the MLE
+
+What we will need:
+- the Log-Likelihood Function
+- the score function (first derivative of the log-likelihood)
+- the second derivative (information) of the log-likelihood function
+- the type of random variables and generate data based upon their distribution (this means creating a set of random variables based upon the problem.)
+
+General Algorithm
+```{r}
+newton_mle = function(start, data, tol=1e-7, maxiter=100){
+  p = start
+  for (i in 1:maxiter) {
+    p_new = p - (score(p, data) / info(p, data))
+    if (abs(p_new - p) < tol) {
+      return(list(estimate=p_new, iterations= i))
+    }
+    p = p_new
+  }
+  stop("Did not converge")
+}
+```
+
+Example 1: Suppose X_1,...,X_n are iid Bernoulli(p) random variables. Let's find the MLE using R.
+
+We will first need to set a random seed for reproducing our results the same each time we run the code (this is called reproducibility)
+
+```{r}
+set.seed(42)
+
+x = rbinom(20, size=1, prob=0.6)
+
+score = function(p, data) {
+  sum(data)/p - (length(data) - sum(data))/(1-p)
+}
+
+info = function(p, data) {
+  -sum(data)/p^2 - (length(data) - sum(data)) / (1-p)^2
+}
+
+newton_mle(start=0.5, data=x)
+
+
+```
+
+Now we know to check our work, our answer should match with the sample mean since that is the MLE for this example. Let's check if this is true.
+
+```{r}
+mean(x)
+```
+
+Voila, our algorithm approximated the MLE to exact precision to the theoretical result.
+
+### Example 2
+
+Let X_{1},...,X_{n} be iid Geometric(p) with the pmf p(1-p)^1-x for x = 1,2,... Compute the MLE in R and double check with the theoretical result.
+
+```{r}
+set.seed(42)
+
+x = rgeom(20, prob=0.7)
+
+score = function(p, data) {
+  (length(data) / p) - ((sum(data) - length(data)) / (1-p))
+}
+
+info = function(p, data) {
+  (-length(data)/p^2) - ((sum(data) - length(data)) / (1-p)^2)
+}
+
+newton_mle(start=0.5, data=x)
+
+```
+
+```{r}
+check_mle = 1/mean(x)
+check_mle
+```
+
+So...why is this useful in computational statistics? This version of the Newton-Raphson algorithm can help approximate and provide better fitting results for different regression models such as logistic regression and Poisson regression that may require numerical approximations.
+
+<br>

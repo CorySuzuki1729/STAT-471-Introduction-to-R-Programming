@@ -1,0 +1,1194 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+%
+\documentclass[
+]{article}
+\usepackage{amsmath,amssymb}
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math} % this also loads fontspec
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+\usepackage{lmodern}
+\ifPDFTeX\else
+  % xetex/luatex font selection
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{xcolor}
+\usepackage[margin=1in]{geometry}
+\usepackage{color}
+\usepackage{fancyvrb}
+\newcommand{\VerbBar}{|}
+\newcommand{\VERB}{\Verb[commandchars=\\\{\}]}
+\DefineVerbatimEnvironment{Highlighting}{Verbatim}{commandchars=\\\{\}}
+% Add ',fontsize=\small' for more characters per line
+\usepackage{framed}
+\definecolor{shadecolor}{RGB}{248,248,248}
+\newenvironment{Shaded}{\begin{snugshade}}{\end{snugshade}}
+\newcommand{\AlertTok}[1]{\textcolor[rgb]{0.94,0.16,0.16}{#1}}
+\newcommand{\AnnotationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\AttributeTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{#1}}
+\newcommand{\BaseNTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\BuiltInTok}[1]{#1}
+\newcommand{\CharTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\CommentTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\CommentVarTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ConstantTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
+\newcommand{\ControlFlowTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\DataTypeTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{#1}}
+\newcommand{\DecValTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\DocumentationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ErrorTok}[1]{\textcolor[rgb]{0.64,0.00,0.00}{\textbf{#1}}}
+\newcommand{\ExtensionTok}[1]{#1}
+\newcommand{\FloatTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\FunctionTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\ImportTok}[1]{#1}
+\newcommand{\InformationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\KeywordTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\NormalTok}[1]{#1}
+\newcommand{\OperatorTok}[1]{\textcolor[rgb]{0.81,0.36,0.00}{\textbf{#1}}}
+\newcommand{\OtherTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
+\newcommand{\PreprocessorTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\RegionMarkerTok}[1]{#1}
+\newcommand{\SpecialCharTok}[1]{\textcolor[rgb]{0.81,0.36,0.00}{\textbf{#1}}}
+\newcommand{\SpecialStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\StringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\VariableTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\VerbatimStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\WarningTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\usepackage{longtable,booktabs,array}
+\usepackage{calc} % for calculating minipage widths
+% Correct order of tables after \paragraph or \subparagraph
+\usepackage{etoolbox}
+\makeatletter
+\patchcmd\longtable{\par}{\if@noskipsec\mbox{}\fi\par}{}{}
+\makeatother
+% Allow footnotes in longtable head/foot
+\IfFileExists{footnotehyper.sty}{\usepackage{footnotehyper}}{\usepackage{footnote}}
+\makesavenoteenv{longtable}
+\usepackage{graphicx}
+\makeatletter
+\newsavebox\pandoc@box
+\newcommand*\pandocbounded[1]{% scales image to fit in text height/width
+  \sbox\pandoc@box{#1}%
+  \Gscale@div\@tempa{\textheight}{\dimexpr\ht\pandoc@box+\dp\pandoc@box\relax}%
+  \Gscale@div\@tempb{\linewidth}{\wd\pandoc@box}%
+  \ifdim\@tempb\p@<\@tempa\p@\let\@tempa\@tempb\fi% select the smaller of both
+  \ifdim\@tempa\p@<\p@\scalebox{\@tempa}{\usebox\pandoc@box}%
+  \else\usebox{\pandoc@box}%
+  \fi%
+}
+% Set default figure placement to htbp
+\def\fps@figure{htbp}
+\makeatother
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{-\maxdimen} % remove section numbering
+\usepackage{bookmark}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\urlstyle{same}
+\hypersetup{
+  pdftitle={R Notebook},
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+
+\title{R Notebook}
+\author{}
+\date{\vspace{-2.5em}}
+
+\begin{document}
+\maketitle
+
+\subsubsection{\texorpdfstring{\textbf{For Loops, While Loops, and
+Custom
+Functions}}{For Loops, While Loops, and Custom Functions}}\label{for-loops-while-loops-and-custom-functions}
+
+\subsubsection{\texorpdfstring{\textbf{For
+Loops}}{For Loops}}\label{for-loops}
+
+\begin{itemize}
+\tightlist
+\item
+  In math and stats, we have dealt with summations and product
+  iterations in the past.
+\item
+  We can express sums, products, and any iterative procedures as a loop.
+\item
+  With sums, addition is ``iterated'' each time, from a starting index
+  to an ending index.
+\item
+  You can think of this as how for and while loops work.
+\end{itemize}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{sum }\OtherTok{=} \DecValTok{0}
+\ControlFlowTok{for}\NormalTok{ (i }\ControlFlowTok{in} \DecValTok{1}\SpecialCharTok{:}\DecValTok{10}\NormalTok{) \{}
+\NormalTok{  sum }\OtherTok{=}\NormalTok{ sum }\SpecialCharTok{+}\NormalTok{ i}
+\NormalTok{\}}
+\NormalTok{sum}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] 55
+\end{verbatim}
+
+\subsubsection{\texorpdfstring{\textbf{Example: Sorting a Vector without
+Built-In
+Functions}}{Example: Sorting a Vector without Built-In Functions}}\label{example-sorting-a-vector-without-built-in-functions}
+
+The idea: To sort a vector, we want to check each pair of successive
+elements in a vector and compare the greatest value.
+
+The algorithm:
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\item
+  Write a for loop to iterate from the first element to the last ``nth''
+  element.
+\item
+  Create another for loop to iterate from the 0th element to the each
+  element that'll be compared next (n-i)th element.
+\item
+  Create an if-else condition block. If the current element is greater
+  than the next element in the vector, swap the elements.
+\end{enumerate}
+
+This sorting algorithm is called the ``bubble sort algorithm''. Here, it
+sorts the vector in ascending order, but you can switch the conditional
+sign to sort by descending order.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{vec }\OtherTok{=} \FunctionTok{c}\NormalTok{(}\DecValTok{76}\NormalTok{, }\DecValTok{23}\NormalTok{, }\DecValTok{45}\NormalTok{, }\DecValTok{12}\NormalTok{, }\DecValTok{54}\NormalTok{, }\DecValTok{9}\NormalTok{)}
+\NormalTok{n }\OtherTok{=} \FunctionTok{length}\NormalTok{(vec)}
+
+\ControlFlowTok{for}\NormalTok{ (i }\ControlFlowTok{in} \DecValTok{1}\SpecialCharTok{:}\NormalTok{(n}\DecValTok{{-}1}\NormalTok{)) \{}
+  \ControlFlowTok{for}\NormalTok{ (j }\ControlFlowTok{in} \DecValTok{1}\SpecialCharTok{:}\NormalTok{(n}\SpecialCharTok{{-}}\NormalTok{i)) \{}
+    \ControlFlowTok{if}\NormalTok{ (vec[j] }\SpecialCharTok{\textgreater{}}\NormalTok{ vec[j}\SpecialCharTok{+}\DecValTok{1}\NormalTok{]) \{}
+\NormalTok{      item }\OtherTok{=}\NormalTok{ vec[j]}
+\NormalTok{      vec[j] }\OtherTok{=}\NormalTok{ vec[j}\SpecialCharTok{+}\DecValTok{1}\NormalTok{]}
+\NormalTok{      vec[j}\SpecialCharTok{+}\DecValTok{1}\NormalTok{] }\OtherTok{=}\NormalTok{ item}
+\NormalTok{    \}}
+\NormalTok{  \}}
+\NormalTok{\}}
+\NormalTok{vec}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1]  9 12 23 45 54 76
+\end{verbatim}
+
+\subsubsection{\texorpdfstring{\textbf{While
+Loops}}{While Loops}}\label{while-loops}
+
+While loops are iterative as well, however they're written differently
+and the logic is dependent on the conditions you define.
+
+\begin{itemize}
+\tightlist
+\item
+  These conditions are controlled with logical values like TRUE or
+  FALSE.
+\item
+  For loops automatically end once the maximum number of iterations are
+  reached, while loops may run forever if not ended with a ``flag''
+  condition.
+\end{itemize}
+
+\subsubsection{\texorpdfstring{\textbf{Example: Printing Numbers Using a
+While
+Loop}}{Example: Printing Numbers Using a While Loop}}\label{example-printing-numbers-using-a-while-loop}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{num }\OtherTok{=} \DecValTok{1}
+
+\ControlFlowTok{while}\NormalTok{ (num }\SpecialCharTok{\textless{}} \DecValTok{5}\NormalTok{) \{}
+  \FunctionTok{print}\NormalTok{(num)}
+\NormalTok{  num }\OtherTok{=}\NormalTok{ num }\SpecialCharTok{+} \DecValTok{1}
+\NormalTok{\}}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] 1
+## [1] 2
+## [1] 3
+## [1] 4
+\end{verbatim}
+
+\subsubsection{\texorpdfstring{\textbf{Example: Calculating Sum of
+Elements in a
+Vector}}{Example: Calculating Sum of Elements in a Vector}}\label{example-calculating-sum-of-elements-in-a-vector}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{nums }\OtherTok{=} \FunctionTok{c}\NormalTok{(}\DecValTok{23}\NormalTok{, }\DecValTok{99}\NormalTok{, }\DecValTok{101}\NormalTok{, }\DecValTok{62}\NormalTok{, }\DecValTok{88}\NormalTok{)}
+\NormalTok{total }\OtherTok{=} \DecValTok{0}
+\NormalTok{n }\OtherTok{=} \FunctionTok{length}\NormalTok{(nums)}
+\ControlFlowTok{for}\NormalTok{ (i }\ControlFlowTok{in} \DecValTok{1}\SpecialCharTok{:}\NormalTok{n) \{}
+\NormalTok{  total }\OtherTok{=}\NormalTok{ total }\SpecialCharTok{+}\NormalTok{ nums[i]}
+\NormalTok{\}}
+\NormalTok{total}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] 373
+\end{verbatim}
+
+\subsubsection{\texorpdfstring{\textbf{Example: Calculating Accuracy of
+a Machine Learning
+Model}}{Example: Calculating Accuracy of a Machine Learning Model}}\label{example-calculating-accuracy-of-a-machine-learning-model}
+
+Suppose you run your machine learning model on some training data to
+classify if patients have pneumonia (yes=1) or not (no=0). You want to
+calculate the accuracy of your model by comparing your predictions with
+the known data you have.
+
+\begin{itemize}
+\tightlist
+\item
+  Our predictions are stored in the variable ``preds'' and our test data
+  values are stored in the variable ``test\_vals''.
+\end{itemize}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{preds }\OtherTok{=} \FunctionTok{c}\NormalTok{(}\DecValTok{0}\NormalTok{, }\DecValTok{1}\NormalTok{, }\DecValTok{1}\NormalTok{, }\DecValTok{0}\NormalTok{, }\DecValTok{1}\NormalTok{, }\DecValTok{0}\NormalTok{, }\DecValTok{1}\NormalTok{, }\DecValTok{0}\NormalTok{, }\DecValTok{0}\NormalTok{, }\DecValTok{1}\NormalTok{)}
+\NormalTok{test\_vals }\OtherTok{=} \FunctionTok{c}\NormalTok{(}\DecValTok{0}\NormalTok{, }\DecValTok{0}\NormalTok{, }\DecValTok{1}\NormalTok{, }\DecValTok{1}\NormalTok{, }\DecValTok{1}\NormalTok{, }\DecValTok{0}\NormalTok{, }\DecValTok{1}\NormalTok{, }\DecValTok{1}\NormalTok{, }\DecValTok{0}\NormalTok{, }\DecValTok{1}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+To compute the accuracy of this model, we count the number of matches in
+each vector and divide by the total observations we have. We'll write
+some R code to compute the accuracy of our model and round it to two
+decimal places.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{acc\_count }\OtherTok{=} \DecValTok{0}
+
+\CommentTok{\# Vectors are the same size, so you can use either pred\_len or test\_len here.}
+
+\NormalTok{pred\_len }\OtherTok{=} \FunctionTok{length}\NormalTok{(preds)}
+\NormalTok{test\_len }\OtherTok{=} \FunctionTok{length}\NormalTok{(test\_vals)}
+\ControlFlowTok{for}\NormalTok{ (i }\ControlFlowTok{in} \DecValTok{1}\SpecialCharTok{:}\NormalTok{pred\_len) \{}
+  \ControlFlowTok{if}\NormalTok{ (preds[i] }\SpecialCharTok{==}\NormalTok{ test\_vals[i]) \{}
+\NormalTok{    acc\_count }\OtherTok{=}\NormalTok{ acc\_count }\SpecialCharTok{+} \DecValTok{1}
+\NormalTok{  \}}
+\NormalTok{\}}
+\NormalTok{acc\_tot }\OtherTok{=}\NormalTok{ acc\_count }\SpecialCharTok{/}\NormalTok{ pred\_len}
+\NormalTok{acc\_tot }\OtherTok{=} \FunctionTok{round}\NormalTok{(acc\_tot, }\DecValTok{2}\NormalTok{)}
+\NormalTok{acc\_tot}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] 0.7
+\end{verbatim}
+
+\subsubsection{\texorpdfstring{\textbf{Functions}}{Functions}}\label{functions}
+
+\begin{itemize}
+\tightlist
+\item
+  Functions can organize multiple lines of code if you're handling
+  multiple sub-tasks within a single task.
+\item
+  Alongside using built-in functions in R, you can write your own custom
+  functions.
+\end{itemize}
+
+\subsubsection{\texorpdfstring{\textbf{Example: Writing a Function to
+Calculate the Mean and Variance of a
+Vector}}{Example: Writing a Function to Calculate the Mean and Variance of a Vector}}\label{example-writing-a-function-to-calculate-the-mean-and-variance-of-a-vector}
+
+For this example, we'll use the mean and variance built-in functions.
+Let's also round our outputs to two decimal places.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{vec }\OtherTok{=} \FunctionTok{c}\NormalTok{(}\DecValTok{76}\NormalTok{, }\DecValTok{23}\NormalTok{, }\DecValTok{45}\NormalTok{, }\DecValTok{12}\NormalTok{, }\DecValTok{54}\NormalTok{, }\DecValTok{9}\NormalTok{)}
+\NormalTok{stats\_fun }\OtherTok{=} \ControlFlowTok{function}\NormalTok{(x) \{}
+\NormalTok{mean\_vec }\OtherTok{=} \FunctionTok{round}\NormalTok{(}\FunctionTok{mean}\NormalTok{(x), }\DecValTok{2}\NormalTok{)}
+\NormalTok{var\_vec }\OtherTok{=} \FunctionTok{round}\NormalTok{(}\FunctionTok{var}\NormalTok{(x), }\DecValTok{2}\NormalTok{)}
+\FunctionTok{print}\NormalTok{(mean\_vec)}
+\FunctionTok{print}\NormalTok{(var\_vec)}
+\NormalTok{\}}
+\FunctionTok{stats\_fun}\NormalTok{(vec)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] 36.5
+## [1] 695.5
+\end{verbatim}
+
+\subsubsection{\texorpdfstring{\textbf{Example: Writing a Function to
+Standardize a
+Vector}}{Example: Writing a Function to Standardize a Vector}}\label{example-writing-a-function-to-standardize-a-vector}
+
+Recall that when we standardize data, we want to scale each data value
+as so:
+
+(x - min)/(max - min)
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{vec }\OtherTok{=} \FunctionTok{c}\NormalTok{(}\DecValTok{76}\NormalTok{, }\DecValTok{23}\NormalTok{, }\DecValTok{45}\NormalTok{, }\DecValTok{12}\NormalTok{, }\DecValTok{54}\NormalTok{, }\DecValTok{9}\NormalTok{)}
+\NormalTok{standardization }\OtherTok{=} \ControlFlowTok{function}\NormalTok{(x) \{}
+\NormalTok{n }\OtherTok{=} \FunctionTok{length}\NormalTok{(x)}
+\ControlFlowTok{for}\NormalTok{ (i }\ControlFlowTok{in} \DecValTok{1}\SpecialCharTok{:}\NormalTok{n) \{}
+\NormalTok{  x[i] }\OtherTok{=} \FunctionTok{round}\NormalTok{((x[i] }\SpecialCharTok{{-}} \FunctionTok{min}\NormalTok{(x)) }\SpecialCharTok{/}\NormalTok{ (}\FunctionTok{max}\NormalTok{(x) }\SpecialCharTok{{-}} \FunctionTok{min}\NormalTok{(x)), }\DecValTok{2}\NormalTok{)}
+\NormalTok{\}}
+\FunctionTok{print}\NormalTok{(x)}
+\NormalTok{\}}
+\FunctionTok{standardization}\NormalTok{(vec)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] 1.00 0.42 0.83 0.22 1.00 1.00
+\end{verbatim}
+
+\subsubsection{Data Frames vs.~Tibbles}\label{data-frames-vs.-tibbles}
+
+\paragraph{R packages}\label{r-packages}
+
+A common point of confusion for new R users is understanding R packages.
+R packages extend the functionality of R by providing additional
+functions, datasets, and documentation. These packages are developed by
+a global community and can be downloaded for free.
+
+\textbf{A helpful analogy:} Think of R as a brand-new smartphone. It has
+basic functionality out of the box, but to do more, you'll want to
+download apps. R packages are like these apps.
+
+For example, say you've just bought a new phone and want to share a
+photo on \emph{Instagram} You need to:
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\tightlist
+\item
+  \textbf{Install} the app.
+\item
+  \textbf{Open} the app.
+\end{enumerate}
+
+Similarly, to use an R package, you must:
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\tightlist
+\item
+  \textbf{Install} the package.
+\item
+  \textbf{Load} the package.
+\end{enumerate}
+
+Most packages are not installed by default when you install R and
+RStudio. If you want to use a package for the first time, you must
+install it first.
+
+Likewise, packages are not automatically loaded when you start RStudio.
+You'll need to load each package you want to use every time you start a
+new R session.
+
+\paragraph{Installing a Package}\label{installing-a-package}
+
+There are two common ways to install a package in R:
+
+\textbf{Option 1: Using the RStudio Interface}
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\tightlist
+\item
+  Click \textbf{Tools → Install Packages}
+\item
+  Type the name of the package into the text box.
+\item
+  Click \textbf{Install}.
+\end{enumerate}
+
+\textbf{Option 2: Using Code in the Console}
+
+You can also install a package by running the following command in the
+console:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\#install.packages("ggplot2")}
+\end{Highlighting}
+\end{Shaded}
+
+Make sure to include quotation marks around the package name.
+
+\paragraph{Loading a Package}\label{loading-a-package}
+
+Once you've installed a package, you'll need to load it into your
+current R session using library() before you can use it. lp
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{library}\NormalTok{(ggplot2)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Warning: package 'ggplot2' was built under R version 4.3.3
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# or}
+\CommentTok{\#library("ggplot2")}
+\end{Highlighting}
+\end{Shaded}
+
+If the console returns a blinking cursor with no error, the package
+loaded successfully.
+
+If you see:
+\texttt{Error\ in\ library(ggplot2)\ :\ there\ is\ no\ package\ called\ ‘ggplot2’}
+
+It means the package was not installed successfully.
+
+\paragraph{Exercise 1}\label{exercise-1}
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\item
+  Install the following packages:
+
+  \begin{itemize}
+  \item
+    \texttt{dplyr}: Functions for manipulating and transforming data
+    frames.
+  \item
+    \texttt{nycflights13}: Dataset of all flights departing from NYC
+    airports (JFK, LGA, EWR) in 2013.
+  \item
+    \texttt{knitr}: Functions for generating reports and tables.
+  \end{itemize}
+\item
+  Load each of these packages using \texttt{library()}.
+\end{enumerate}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\#install.packages(c("dplyr", "nycflights13", "knitr"))}
+
+\FunctionTok{library}\NormalTok{(dplyr)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Warning: package 'dplyr' was built under R version 4.3.3
+\end{verbatim}
+
+\begin{verbatim}
+## 
+## Attaching package: 'dplyr'
+\end{verbatim}
+
+\begin{verbatim}
+## The following objects are masked from 'package:stats':
+## 
+##     filter, lag
+\end{verbatim}
+
+\begin{verbatim}
+## The following objects are masked from 'package:base':
+## 
+##     intersect, setdiff, setequal, union
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{library}\NormalTok{(nycflights13)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Warning: package 'nycflights13' was built under R version 4.3.3
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{library}\NormalTok{(knitr)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Warning: package 'knitr' was built under R version 4.3.3
+\end{verbatim}
+
+\paragraph{The Tidyverse Package}\label{the-tidyverse-package}
+
+The \texttt{tidyverse} is a collection of R packages designed for
+importing, cleaning, transforming, visualizing, and modeling data.
+
+Some core tidyverse packages include:
+
+\begin{itemize}
+\tightlist
+\item
+  \texttt{ggplot2}: data visualization
+\item
+  \texttt{dplyr}: data manipulation
+\item
+  \texttt{tidyr}: reshaping and tidying data
+\item
+  \texttt{readr}: importing data
+\item
+  \texttt{tibble}: modern data frames
+\item
+  \texttt{stringr}: working with strings
+\item
+  \texttt{forcats}: working with factors
+\end{itemize}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\#install.packages("tidyverse")}
+\FunctionTok{library}\NormalTok{(tidyverse)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Warning: package 'tidyverse' was built under R version 4.3.3
+\end{verbatim}
+
+\begin{verbatim}
+## Warning: package 'stringr' was built under R version 4.3.3
+\end{verbatim}
+
+\begin{verbatim}
+## Warning: package 'forcats' was built under R version 4.3.3
+\end{verbatim}
+
+\begin{verbatim}
+## Warning: package 'lubridate' was built under R version 4.3.3
+\end{verbatim}
+
+\begin{verbatim}
+## -- Attaching core tidyverse packages ------------------------ tidyverse 2.0.0 --
+## v forcats   1.0.0     v stringr   1.5.1
+## v lubridate 1.9.3     v tibble    3.2.1
+## v purrr     1.0.2     v tidyr     1.3.1
+## v readr     2.1.5     
+## -- Conflicts ------------------------------------------ tidyverse_conflicts() --
+## x dplyr::filter() masks stats::filter()
+## x dplyr::lag()    masks stats::lag()
+## i Use the conflicted package (<http://conflicted.r-lib.org/>) to force all conflicts to become errors
+\end{verbatim}
+
+This will automatically load the core \texttt{tidyverse} packages.
+
+\paragraph{Forgetting to Load a
+Package}\label{forgetting-to-load-a-package}
+
+You must load a package each time you start RStudio.
+
+If you forget, you might see:
+\texttt{Error:\ could\ not\ find\ function}
+
+This means R doesn't know where the function is because the package
+isn't loaded
+
+\paragraph{\texorpdfstring{R's Traditional
+\texttt{data.frame}}{R's Traditional data.frame}}\label{rs-traditional-data.frame}
+
+A \textbf{data frame} is a list of variables (columns) with the same
+number of rows, where each row has a unique row name.
+
+For example, the \texttt{cars} data belongs to the class
+\texttt{data.frame}.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\#data(cars)}
+
+\CommentTok{\# check type}
+\FunctionTok{class}\NormalTok{(cars)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] "data.frame"
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# column names }
+\FunctionTok{colnames}\NormalTok{(cars)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] "speed" "dist"
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# row names}
+\CommentTok{\#rownames(cars)}
+
+\CommentTok{\# check dimensions (rows, columns)}
+\FunctionTok{dim}\NormalTok{(cars)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] 50  2
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# first rows }
+\FunctionTok{head}\NormalTok{(cars)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##   speed dist
+## 1     4    2
+## 2     4   10
+## 3     7    4
+## 4     7   22
+## 5     8   16
+## 6     9   10
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# last rows}
+\FunctionTok{tail}\NormalTok{(cars)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##    speed dist
+## 45    23   54
+## 46    24   70
+## 47    24   92
+## 48    24   93
+## 49    24  120
+## 50    25   85
+\end{verbatim}
+
+\paragraph{Tibbles}\label{tibbles}
+
+\textbf{Tibbles} are data frames, but they tweak some older behaviors to
+make them easier to use.
+
+Two main differences from a classic data frame:
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\item
+  \textbf{Printing:} Shows only the first 10 rows and all columns that
+  fit on screen, along with each column's data type.
+\item
+  \textbf{Subsetting:} Behaves more consistently and avoids partial name
+  matching.
+\end{enumerate}
+
+We can create a tibble using the \texttt{cars} dataset:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{cars\_tibble }\OtherTok{\textless{}{-}} \FunctionTok{as\_tibble}\NormalTok{(cars)}
+\NormalTok{cars\_tibble}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## # A tibble: 50 x 2
+##    speed  dist
+##    <dbl> <dbl>
+##  1     4     2
+##  2     4    10
+##  3     7     4
+##  4     7    22
+##  5     8    16
+##  6     9    10
+##  7    10    18
+##  8    10    26
+##  9    10    34
+## 10    11    17
+## # i 40 more rows
+\end{verbatim}
+
+\paragraph{Subsetting}\label{subsetting}
+
+To extract a single column from a data frame, you can use\texttt{\$}or
+\texttt{{[}{[}\ {]}{]}}:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# extract by name}
+\NormalTok{cars}\SpecialCharTok{$}\NormalTok{speed}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##  [1]  4  4  7  7  8  9 10 10 10 11 11 12 12 12 12 13 13 13 13 14 14 14 14 15 15
+## [26] 15 16 16 17 17 17 18 18 18 18 19 19 19 20 20 20 20 20 22 23 24 24 24 24 25
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# extract by name}
+\NormalTok{cars[[}\StringTok{"speed"}\NormalTok{]]}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##  [1]  4  4  7  7  8  9 10 10 10 11 11 12 12 12 12 13 13 13 13 14 14 14 14 15 15
+## [26] 15 16 16 17 17 17 18 18 18 18 19 19 19 20 20 20 20 20 22 23 24 24 24 24 25
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# extract by position}
+\NormalTok{cars[[}\DecValTok{1}\NormalTok{]]}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##  [1]  4  4  7  7  8  9 10 10 10 11 11 12 12 12 12 13 13 13 13 14 14 14 14 15 15
+## [26] 15 16 16 17 17 17 18 18 18 18 19 19 19 20 20 20 20 20 22 23 24 24 24 24 25
+\end{verbatim}
+
+The same methods work with tibbles:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{cars\_tibble}\SpecialCharTok{$}\NormalTok{speed}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##  [1]  4  4  7  7  8  9 10 10 10 11 11 12 12 12 12 13 13 13 13 14 14 14 14 15 15
+## [26] 15 16 16 17 17 17 18 18 18 18 19 19 19 20 20 20 20 20 22 23 24 24 24 24 25
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{cars\_tibble[[}\StringTok{"speed"}\NormalTok{]]}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##  [1]  4  4  7  7  8  9 10 10 10 11 11 12 12 12 12 13 13 13 13 14 14 14 14 15 15
+## [26] 15 16 16 17 17 17 18 18 18 18 19 19 19 20 20 20 20 20 22 23 24 24 24 24 25
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{cars\_tibble[[}\DecValTok{1}\NormalTok{]]}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##  [1]  4  4  7  7  8  9 10 10 10 11 11 12 12 12 12 13 13 13 13 14 14 14 14 15 15
+## [26] 15 16 16 17 17 17 18 18 18 18 19 19 19 20 20 20 20 20 22 23 24 24 24 24 25
+\end{verbatim}
+
+You can also use the \textbf{pipe operator} with \texttt{pull()}:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{cars\_tibble }\SpecialCharTok{|\textgreater{}} \FunctionTok{pull}\NormalTok{(speed)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##  [1]  4  4  7  7  8  9 10 10 10 11 11 12 12 12 12 13 13 13 13 14 14 14 14 15 15
+## [26] 15 16 16 17 17 17 18 18 18 18 19 19 19 20 20 20 20 20 22 23 24 24 24 24 25
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\#cars\_tibble \%\textgreater{}\% pull(speed)}
+\end{Highlighting}
+\end{Shaded}
+
+The pipe operator (\texttt{\textbar{}\textgreater{}} or
+\texttt{\%\textgreater{}\%}) is a tool that let's you pass the result of
+one function directly into the next function, making your code flow more
+naturally.
+
+\paragraph{Partial Name Matching}\label{partial-name-matching}
+
+In a \textbf{data frame}, R will try to guess the column name if you
+only type part of it.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# data frame will match "spe" to "speed"}
+\CommentTok{\#cars$spe}
+\end{Highlighting}
+\end{Shaded}
+
+In a \textbf{tibble}, R will not guess.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\#tibble will give a warning}
+\CommentTok{\#cars\_tibble$spe}
+\end{Highlighting}
+\end{Shaded}
+
+\paragraph{\texorpdfstring{The \texttt{nycflights13}
+Data}{The nycflights13 Data}}\label{the-nycflights13-data}
+
+The \texttt{nycflights13} package contains five datasets stored in data
+frames:
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\tightlist
+\item
+  \textbf{flights:} information on all 336,776 flights
+\item
+  \textbf{airlines:} airline names and IATA codes
+\item
+  \textbf{planes:} aircraft information
+\item
+  \textbf{weather:} hourly weather data for NYC airports
+\item
+  \textbf{airports:}airport names, codes, and locations
+\end{enumerate}
+
+We'll start by exploring the \texttt{flights} data frame.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{library}\NormalTok{(nycflights13)}
+\NormalTok{flights}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## # A tibble: 336,776 x 19
+##     year month   day dep_time sched_dep_time dep_delay arr_time sched_arr_time
+##    <int> <int> <int>    <int>          <int>     <dbl>    <int>          <int>
+##  1  2013     1     1      517            515         2      830            819
+##  2  2013     1     1      533            529         4      850            830
+##  3  2013     1     1      542            540         2      923            850
+##  4  2013     1     1      544            545        -1     1004           1022
+##  5  2013     1     1      554            600        -6      812            837
+##  6  2013     1     1      554            558        -4      740            728
+##  7  2013     1     1      555            600        -5      913            854
+##  8  2013     1     1      557            600        -3      709            723
+##  9  2013     1     1      557            600        -3      838            846
+## 10  2013     1     1      558            600        -2      753            745
+## # i 336,766 more rows
+## # i 11 more variables: arr_delay <dbl>, carrier <chr>, flight <int>,
+## #   tailnum <chr>, origin <chr>, dest <chr>, air_time <dbl>, distance <dbl>,
+## #   hour <dbl>, minute <dbl>, time_hour <dttm>
+\end{verbatim}
+
+\paragraph{Exploring Data Frames}\label{exploring-data-frames}
+
+There are several ways to explore a data frame in R:
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\tightlist
+\item
+  \texttt{View()}: spreadsheet view of the dataset
+\item
+  \texttt{glimpse()}: compact overview of all variables and their data
+  types.
+\item
+  \texttt{kable()}: nicely formatted tables for reports
+\item
+  \texttt{\$}: extraction operator
+\end{enumerate}
+
+\paragraph{Exercise 2}\label{exercise-2}
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\tightlist
+\item
+  Use \texttt{View()} on flights. What does one row represent?
+
+  \begin{enumerate}
+  \def\labelenumii{\alph{enumii}.}
+  \tightlist
+  \item
+    Data on an airline
+  \item
+    Data on a flight ✅
+  \item
+    Data on an airport
+  \item
+    Data on multiple flights
+  \end{enumerate}
+\item
+  Use \texttt{str()} on flights. How many character variables are there?
+\end{enumerate}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{view}\NormalTok{(flights)}
+
+\FunctionTok{str}\NormalTok{(flights)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## tibble [336,776 x 19] (S3: tbl_df/tbl/data.frame)
+##  $ year          : int [1:336776] 2013 2013 2013 2013 2013 2013 2013 2013 2013 2013 ...
+##  $ month         : int [1:336776] 1 1 1 1 1 1 1 1 1 1 ...
+##  $ day           : int [1:336776] 1 1 1 1 1 1 1 1 1 1 ...
+##  $ dep_time      : int [1:336776] 517 533 542 544 554 554 555 557 557 558 ...
+##  $ sched_dep_time: int [1:336776] 515 529 540 545 600 558 600 600 600 600 ...
+##  $ dep_delay     : num [1:336776] 2 4 2 -1 -6 -4 -5 -3 -3 -2 ...
+##  $ arr_time      : int [1:336776] 830 850 923 1004 812 740 913 709 838 753 ...
+##  $ sched_arr_time: int [1:336776] 819 830 850 1022 837 728 854 723 846 745 ...
+##  $ arr_delay     : num [1:336776] 11 20 33 -18 -25 12 19 -14 -8 8 ...
+##  $ carrier       : chr [1:336776] "UA" "UA" "AA" "B6" ...
+##  $ flight        : int [1:336776] 1545 1714 1141 725 461 1696 507 5708 79 301 ...
+##  $ tailnum       : chr [1:336776] "N14228" "N24211" "N619AA" "N804JB" ...
+##  $ origin        : chr [1:336776] "EWR" "LGA" "JFK" "JFK" ...
+##  $ dest          : chr [1:336776] "IAH" "IAH" "MIA" "BQN" ...
+##  $ air_time      : num [1:336776] 227 227 160 183 116 150 158 53 140 138 ...
+##  $ distance      : num [1:336776] 1400 1416 1089 1576 762 ...
+##  $ hour          : num [1:336776] 5 5 5 5 6 5 6 6 6 6 ...
+##  $ minute        : num [1:336776] 15 29 40 45 0 58 0 0 0 0 ...
+##  $ time_hour     : POSIXct[1:336776], format: "2013-01-01 05:00:00" "2013-01-01 05:00:00" ...
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\#represent airline codes or airport codes }
+\CommentTok{\#represent measurable quantities you can calculate with}
+\end{Highlighting}
+\end{Shaded}
+
+\paragraph{\texorpdfstring{\texttt{glimpse()}}{glimpse()}}\label{glimpse}
+
+The \texttt{glimpse()} function shows:
+
+\begin{itemize}
+\tightlist
+\item
+  The number of rows and columns.
+\item
+  Each variable's name and data type.
+\item
+  A preview of the first few values for each variable.
+\end{itemize}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{glimpse}\NormalTok{(flights)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Rows: 336,776
+## Columns: 19
+## $ year           <int> 2013, 2013, 2013, 2013, 2013, 2013, 2013, 2013, 2013, 2~
+## $ month          <int> 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1~
+## $ day            <int> 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1~
+## $ dep_time       <int> 517, 533, 542, 544, 554, 554, 555, 557, 557, 558, 558, ~
+## $ sched_dep_time <int> 515, 529, 540, 545, 600, 558, 600, 600, 600, 600, 600, ~
+## $ dep_delay      <dbl> 2, 4, 2, -1, -6, -4, -5, -3, -3, -2, -2, -2, -2, -2, -1~
+## $ arr_time       <int> 830, 850, 923, 1004, 812, 740, 913, 709, 838, 753, 849,~
+## $ sched_arr_time <int> 819, 830, 850, 1022, 837, 728, 854, 723, 846, 745, 851,~
+## $ arr_delay      <dbl> 11, 20, 33, -18, -25, 12, 19, -14, -8, 8, -2, -3, 7, -1~
+## $ carrier        <chr> "UA", "UA", "AA", "B6", "DL", "UA", "B6", "EV", "B6", "~
+## $ flight         <int> 1545, 1714, 1141, 725, 461, 1696, 507, 5708, 79, 301, 4~
+## $ tailnum        <chr> "N14228", "N24211", "N619AA", "N804JB", "N668DN", "N394~
+## $ origin         <chr> "EWR", "LGA", "JFK", "JFK", "LGA", "EWR", "EWR", "LGA",~
+## $ dest           <chr> "IAH", "IAH", "MIA", "BQN", "ATL", "ORD", "FLL", "IAD",~
+## $ air_time       <dbl> 227, 227, 160, 183, 116, 150, 158, 53, 140, 138, 149, 1~
+## $ distance       <dbl> 1400, 1416, 1089, 1576, 762, 719, 1065, 229, 944, 733, ~
+## $ hour           <dbl> 5, 5, 5, 5, 6, 5, 6, 6, 6, 6, 6, 6, 6, 6, 6, 5, 6, 6, 6~
+## $ minute         <dbl> 15, 29, 40, 45, 0, 58, 0, 0, 0, 0, 0, 0, 0, 0, 0, 59, 0~
+## $ time_hour      <dttm> 2013-01-01 05:00:00, 2013-01-01 05:00:00, 2013-01-01 0~
+\end{verbatim}
+
+\paragraph{\texorpdfstring{\texttt{kable()}}{kable()}}\label{kable}
+
+The \texttt{kable()} function from the \textbf{knitr} package creates a
+nicely formatted table of the data.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{library}\NormalTok{(knitr)}
+\FunctionTok{kable}\NormalTok{(airlines)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{longtable}[]{@{}ll@{}}
+\toprule\noalign{}
+carrier & name \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+9E & Endeavor Air Inc. \\
+AA & American Airlines Inc. \\
+AS & Alaska Airlines Inc. \\
+B6 & JetBlue Airways \\
+DL & Delta Air Lines Inc. \\
+EV & ExpressJet Airlines Inc. \\
+F9 & Frontier Airlines Inc. \\
+FL & AirTran Airways Corporation \\
+HA & Hawaiian Airlines Inc. \\
+MQ & Envoy Air \\
+OO & SkyWest Airlines Inc. \\
+UA & United Air Lines Inc. \\
+US & US Airways Inc. \\
+VX & Virgin America \\
+WN & Southwest Airlines Co. \\
+YV & Mesa Airlines Inc. \\
+\end{longtable}
+
+\paragraph{\texorpdfstring{\texttt{\$}
+operator}{\$ operator}}\label{operator}
+
+The \$ operator is a quick way to extract a single column from a data
+frame.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{airlines}\SpecialCharTok{$}\NormalTok{name}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##  [1] "Endeavor Air Inc."           "American Airlines Inc."     
+##  [3] "Alaska Airlines Inc."        "JetBlue Airways"            
+##  [5] "Delta Air Lines Inc."        "ExpressJet Airlines Inc."   
+##  [7] "Frontier Airlines Inc."      "AirTran Airways Corporation"
+##  [9] "Hawaiian Airlines Inc."      "Envoy Air"                  
+## [11] "SkyWest Airlines Inc."       "United Air Lines Inc."      
+## [13] "US Airways Inc."             "Virgin America"             
+## [15] "Southwest Airlines Co."      "Mesa Airlines Inc."
+\end{verbatim}
+
+We will more often explore data frames using \texttt{View()} and
+\texttt{glimpse()}.
+
+\paragraph{Types of Variables}\label{types-of-variables}
+
+Data frames can contain different types of variables, each serving a
+specific purpose. Examples include:
+
+\begin{itemize}
+\item
+  \textbf{Identification variables} uniquely identify each observation
+  (e.g., student ID, product serial number).
+\item
+  \textbf{Measurement variables} record numeric values or quantities
+  (e.g., height, exam score).
+\item
+  \textbf{Categorical variables} group observations into categories
+  (e.g., eye color, blood type).
+\end{itemize}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{glimpse}\NormalTok{(airports)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Rows: 1,458
+## Columns: 8
+## $ faa   <chr> "04G", "06A", "06C", "06N", "09J", "0A9", "0G6", "0G7", "0P2", "~
+## $ name  <chr> "Lansdowne Airport", "Moton Field Municipal Airport", "Schaumbur~
+## $ lat   <dbl> 41.13047, 32.46057, 41.98934, 41.43191, 31.07447, 36.37122, 41.4~
+## $ lon   <dbl> -80.61958, -85.68003, -88.10124, -74.39156, -81.42778, -82.17342~
+## $ alt   <dbl> 1044, 264, 801, 523, 11, 1593, 730, 492, 1000, 108, 409, 875, 10~
+## $ tz    <dbl> -5, -6, -6, -5, -5, -5, -5, -5, -5, -8, -5, -6, -5, -5, -5, -5, ~
+## $ dst   <chr> "A", "A", "A", "A", "A", "A", "A", "A", "U", "A", "A", "U", "A",~
+## $ tzone <chr> "America/New_York", "America/Chicago", "America/Chicago", "Ameri~
+\end{verbatim}
+
+\paragraph{Help files}\label{help-files}
+
+R provides built-in help files with documentation for functions,
+datasets, and other objects. You can access a help file by typing
+\texttt{?} followed by the name of a function or data frame in the
+\textbf{Console}.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{?flights}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## starting httpd help server ... done
+\end{verbatim}
+
+Whenever you have questions about a function or dataset, make it a habit
+to check the help file first.
+
+\paragraph{Exercise 3}\label{exercise-3}
+
+Using the \texttt{airports} dataset:
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\item
+  What do the variables \texttt{lat}, \texttt{lon}, \texttt{alt},
+  \texttt{tz}, \texttt{dst}, and \texttt{tzone} describe? (Hint: check
+  the help file for \texttt{airports}.)
+\item
+  Name at least three variables where one is an identification variable
+  and the other two are measurement variable.
+\item
+  Extract those three variables from the data frame.
+\end{enumerate}
+
+\paragraph{Other Data Structures}\label{other-data-structures}
+
+R also includes other data structures such as \textbf{lists},
+\textbf{matrices}, and \textbf{arrays}.
+
+We will not cover these as much in this course, but you can read more
+about them in \emph{Hands-On Programming with R}, Sections 5.3, 5.4, and
+5.7.
+
+\url{https://rstudio-education.github.io/hopr/r-objects.html}.
+
+\end{document}

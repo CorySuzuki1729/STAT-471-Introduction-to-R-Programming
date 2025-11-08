@@ -1,0 +1,49 @@
+---
+title: "PA1 Solutions"
+author: "Cory Suzuki"
+date: "2025-08-25"
+output: html_document
+---
+
+### Problem 1
+
+```{r}
+n = 10
+fib = numeric(n)
+fib[1] = 0
+fib[2] = 1
+for (i in 3:n) {
+  fib[i] = fib[i-1] + fib[i-2]
+}
+fib
+```
+
+Indexing in R starts at 1 for the first element in the vector, so we want to iterate the loop starting at the third element all the way to the end, or the 'nth' element of the vector. The i-1th element is the previous element and the i-2th element is the previous element before the previous. Think of i as the "current" iteration here.
+
+### Problem 2
+
+```{r}
+basic_stats = function(v) {
+  vmean = mean(v)
+  vmedian = median(v)
+  vvar = var(v)
+  vstd = sqrt(vvar) 
+  # Alternatively, you can use sd(v)
+  vmin = min(v)
+  vmax = max(v)
+  paste(vmean, vmedian, vvar, vstd, vmin, vmax)
+}
+
+# Test with a vector of your choice.
+# Let's try c(41 33 22 29 39 40 23 20 31 2)
+
+test_vec = c(41, 33, 22, 29, 39, 40, 23, 20, 31, 2)
+
+basic_stats(test_vec)
+
+# We should get the output:
+# 28 30 141.111111111111 11.8790197874703 2 41
+```
+Tip: You can use the round() function to round numerics to a specified decimal place.
+
+For example, round(vmean, 2) in the above block will round the mean of the vector to 2 decimal places.

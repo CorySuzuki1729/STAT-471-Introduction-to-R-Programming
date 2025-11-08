@@ -1,0 +1,337 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+### Introduction to NLP
+
+### Text Data Preprocessing via Tokenization
+
+Tokenization allows us to process text data as individual words that are assigned indexed values that computers can easily process. We'll first tokenize text using the tidytext package and then I'll show you how to tokenize text with the NLP, tm, and tokenizers libraries. First, let's consider some text from one of Emily Dickinson's novels and clean it up with tidytext.
+
+```{r}
+library(tidytext)
+library(tidyverse)
+
+text <- c("Because I could not stop for Death -",
+          "He kindly stopped for me -",
+          "The Carriage held but just Ourselves -",
+          "and Immortality")
+
+text
+```
+
+```{r}
+text_df = tibble(line=1:4, text=text)
+text_df %>% unnest_tokens(word, text)
+```
+
+And tokenization with tm looks like:
+
+```{r}
+# install.packages("NLP")
+# install.packages("tm")
+
+library(NLP)
+library(tm)
+library(tokenizers)
+
+text = "Natural Language Processing in R is exciting!"
+text_corpus = Corpus(VectorSource(text))
+text_corpus = tm_map(text_corpus, content_transformer(tolower))
+text_corpus = tm_map(text_corpus, removePunctuation)
+text_corpus = tm_map(text_corpus, removeNumbers)
+text_corpus = tm_map(text_corpus, removeWords, stopwords("english"))
+text_corpus = tm_map(text_corpus, stripWhitespace)
+tokenize_words(text)
+
+```
+
+You can see that tidytext is easier to uuse and shorter, however it is more clear using tm on what steps you are taking to preprocess the text data even though there are more lines of code involved. \ 
+Now let's take a look at an example of some basic text mining and analysis.
+
+### Basic Text Analysis and Word Clouds
+
+These next few examples will show you how we can do basic analyses such as visualizing positive and negative words, plotting wordclouds, and after this section, we'll take a look at some foundational NLP techniques. For further learning about NLP, I recommend "Tidytext with R" which is publicly available online for free.
+
+We'll use text from the Gutenbergr package which is a collaborative comprehensive collection of online publications and novels in the public domain stored as a digital library. We'll being using the "Origin of Species" by Charles Darwin which has code 2009.
+
+```{r}
+# install.packages("wordcloud")
+# install.packages("gutenbergr")
+
+# If you want to see other texts for NLP practice, take a look at Project Gutenberg online
+
+library(gutenbergr)
+library(wordcloud)
+
+Oos = gutenberg_download(2009)
+
+Oos_tidy = Oos %>% unnest_tokens(word, text)
+
+Oos_count = Oos_tidy %>% count(word, sort=TRUE)
+Oos_count
+
+```
+
+After tokenizing the text, let's count the frequency distribution of words.
+
+```{r}
+
+```
+
+Now removing stopwords...
+
+```{r}
+Oos_count = Oos_tidy %>% count(word, sort=TRUE) %>% anti_join(stop_words)
+
+```
+
+Now with our text data preprocessed, let's use ggplot to visuualize the frequency distribution of words from highest to lowest.
+
+```{r}
+Oos_count %>%
+  filter(n > 200) %>%
+  mutate(word = reorder(word, n)) %>%
+  ggplot(aes(n, word)) +
+  geom_col() +
+  theme_minimal() +
+  labs(y = NULL)
+```
+
+Now we finally create a word cloud to visualize these results compactly, and here we'll use the minimum frequency cutoff to be 200 and set random.order to FALSE.
+
+```{r}
+wordcloud(words=Oos_count$word,
+          freq = Oos_count$n,
+          min.freq=200,
+          random.order=FALSE,
+          rot.per=0.35,
+          colors=brewer.pal(8, "Dark2"))
+```
+
+
+### Part of Speech Tagging
+
+We can identify parts of speech in a corpus once the Corpus is tokenized. We can use the udpipe package to do this and store our results in a dataframe. This will usually provide the token_id, the actual token value, and the part of speech. \
+Det = determiner \
+Verb = Action word \
+Noun = Person, place, thing, or idea \
+Adjective = Describing word \
+Punctuation = Symbols for grammatical setence structure \
+Adposition = Word that describes where something is located \
+
+The udpipe package uses language models that you can specify, for this example we'll use English. To use these models, they must be downloaded into your computer. For simplicity, the standard English language model will be stored in our R environment's current working directory where your .rmd notebook for this lecture is located.
+
+```{r}
+# install.packages("udpipe")
+library(udpipe)
+
+ud_model = udpipe_download_model(language="english", model_dir = getwd())
+
+ud_model = udpipe_load_model(ud_model$file_model)
+
+sentence = "I love studying statistics, especially the Bayesian methodology!"
+
+ud_annotations = udpipe_annotate(ud_model, x = sentence)
+udpipe_pos = as.data.frame(udpipe_annotations)
+udpipe_pos
+
+```
+
+For another fun example, let's extract the GNU Operating System preamble in its terms and services agreement from its website. We can use the url() function to access the website from within R.
+
+```{r}
+library(tidyverse)
+library(stringr)
+
+text = readLines(url("https://tinyurl.com/gnutxt"), skipNul = TRUE)
+
+
+
+# Remove whitespace at the start and end of words and replace with a single space for preprocessing.
+
+text = text %>% str_squish()
+
+text_annotated = udpipe_annotate(ud_model, x = text) %>% as.data.frame() %>%
+  select(-sentence)
+
+text_annotated
+```
+
+To plot the frequency distribution of POS tags, we can use the txt_freq function from the udpipe package to do so.
+
+```{r}
+txt_freq(text_annotated$upos)
+```
+
+
+### Sentiment Analysis
+
+We can measure the amount of emotional sentiment from text data by using the package in R. The sentiment score that is returned by the sentimentr package is similar to how the correlation coefficient works since it ranges from -1 to 1, where -1 is strongly negative, 0 is neutral, and 1 is strongly positive.
+
+```{r}
+library(sentimentr)
+```
+
+```{r}
+text = c("I love R programming!", "I hate the bugs that pop up in my code.")
+
+sentiment_analysis = sentiment(text)
+print(sentiment_analysis)
+```
+
+```{r}
+library(tidytext)
+library(tidyr)
+library(janeaustenr)
+library(dplyr)
+library(stringr)
+library(sentimentr)
+```
+
+```{r}
+tidy_books = austen_books() %>%
+  group_by(book) %>%
+  mutate(linenumber = row_number(),
+         chapter = cumsum(str_detect(text,
+                                     regex("^chapter [\\divxlc]",
+                                           ignore_case=TRUE)))) %>%
+  ungroup() %>%
+  unnest_tokens(word, text)
+
+get_sentiments("afinn")
+get_sentiments("bing")
+get_sentiments("nrc")
+
+pride_prejudice = tidy_books %>%
+  filter(book=="Pride & Prejudice")
+
+afinn = pride_prejudice %>%
+  inner_join(get_sentiments("afinn")) %>%
+  group_by(index= linenumber %/% 80) %>%
+  summarise(sentiment = sum(value)) %>%
+  mutate(method = "AFINN")
+```
+
+```{r}
+bing_and_nrc = bind_rows(
+  pride_prejudice %>%
+    inner_join(get_sentiments("bing")) %>%
+    mutate(method="Bing et al."),
+  pride_prejudice %>%
+    inner_join(get_sentiments("nrc") %>%
+                 filter(sentiment %in% c("positive", "negative"))) %>%
+    mutate(method = "NRC") %>%
+    count(method, index= linenumber %/% 80, sentiment) %>%
+    pivot_wider(names_from=sentiment,
+                values_from=n,
+                values_fill=0) %>%
+    mutate(sentiment= positive - negative))
+```
+
+### Importance Analysis using the TF-IDF Statistic
+
+Recall that the TF-IDF statistic is the product of the term frequency and inverse document frequency statistics and is defined as t/d * ln(N/D) as outlined in the lecture slides. We can compute TF-IDF values. For this example, let's analyze the tf-idf values from some published novels by Jane Austen. Let's first load and preprocess the data by checking out the most frequent words in her novels. n represents the number times that specific word appears.
+
+```{r}
+library(dplyr)
+library(janeaustenr)
+library(tidytext)
+
+book_words = austen_books() %>%
+  unnest_tokens(word, text) %>%
+  count(book, word, sort=TRUE)
+
+total_words = book_words %>%
+  group_by(book) %>%
+  summarize(total=sum(n))
+
+book_words = left_join(book_words, total_words)
+```
+
+And now for the plots:
+
+```{r}
+library(ggplot2)
+
+ggplot(book_words, aes(n/total, fill=book)) +
+  geom_histogram(show.legend=FALSE) + 
+  xlim(NA, 0.009) +
+  facet_wrap(~book, ncol = 2, scales="free_y")
+```
+
+The distributions between each of the novels are right skewed, which makes sense as the most frequent words are plotted from left to right.
+Now let's see the TF-IDF values by using the bind_tf_idf() function.
+
+```{r}
+book_tf_idf = book_words %>%
+  bind_tf_idf(word, book, n)
+
+book_tf_idf
+```
+
+And now for the terms with the highest tf-idfs.
+
+```{r}
+book_tf_idf %>%
+  select(-total) %>% arrange(desc(tf_idf))
+```
+
+```{r}
+library(forcats)
+
+book_tf_idf %>%
+  group_by(book) %>%
+  slice_max(tf_idf, n=15) %>%
+  ungroup() %>%
+  ggplot(aes(tf_idf, fct_reorder(word, tf_idf), fill=book)) +
+  geom_col(show.legend=FALSE) +
+  facet_wrap(~book, ncol=2, scales="free_y") + labs(x = "tf_idf", y = NULL)
+```
+
+### Machine Learning Approach Using a Support Vector Machine
+
+As we had discussed in the lecture slides, Support Vector Machines (SVMs) can be used to perform text classification and sentiment analysis. The example will be using the e1071 and tm packages, where e1071 helps us fit the SVM with a linear kernel and tm helps us preprocess the text data.
+
+```{r}
+# install.packages("e1071")
+# install.packages("tm")
+library(e1071)
+library(tm)
+
+texts = c("I love R programming", "R is great for data analysis", 
+           "I hate bugs in code", "The weather is bad", 
+           "R is fantastic", "This movie is awful")
+labels = c("positive", "positive", "negative", "negative", "positive", "negative")
+
+corpus = Corpus(VectorSource(texts))
+corpus = tm_map(corpus, content_transformer(tolower))
+corpus = tm_map(corpus, removeWords, stopwords("english"))
+corpus = tm_map(corpus, removePunctuation)
+
+dtm = DocumentTermMatrix(corpus)
+dtm_matrix = as.matrix(dtm)
+
+train_data = dtm_matrix[1:4,]
+train_labels = factor(labels[1:4])
+test_data = dtm_matrix[5:6,]
+test_labels = factor(labels[5:6])
+
+svm_model = svm(train_data, y = train_labels, kernel="linear")
+
+predictions = predict(svm_model, test_data)
+
+accuracy = mean(predictions == test_labels)
+print(paste("Accuracy:", accuracy))
+```
+
+The accuracy here is 0.5, which is not the best but is good enough for illustative purposes. Maybe try using a polynomial or sigmoidal kernel and see if the accuracy of predicting the words with their true sentiments improves! You experiment by appropriately modifying the kernel parameter in the svm() function.
+
+### Disclaimer
+
+Originally, I intended to do an NLP task such as NER and text generation with BERT and a GPT, however due to the many additional packages and external applications to download and parse (it took way too long in R and in my opinion, is better to demonstrate in either Python or Java), it will be deemed outside the scope of the course. However, feel free to look up BERT implementations in R online to see some examples of how it would usually be implemented. Note you'll need rjava or another base programming language in r package to run these types of models.
+
+In the future, I would like to teach a course on Applications of Deep Learning with NLP and Large Language Models like using BERT and GPT's to do NLP tasks, so if you're interested, feel free to provide me your email and I'll provide you a future update on when materials and resources for such a class would be compiled.
+
+<br>

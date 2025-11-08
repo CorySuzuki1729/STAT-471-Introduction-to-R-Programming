@@ -1,0 +1,244 @@
+---
+title: "R Notebook"
+output:
+  html_document:
+    df_print: paged
+---
+
+### **Exploratory Data Analysis (EDA)**
+
+Let's combine what we learned so far in the course to do a full EDA of the bikes dataset. We'll also show how to do PCA as a bonus.
+
+First, load in all libraries and the dataset.
+
+```{r}
+data(iris)
+library(tidyverse)
+library(reshape2)
+
+# Calculate the correlation matrix
+iris_cor <- cor(iris[, 1:4])
+
+# Melt the correlation matrix into a long format for ggplot2
+iris_cor_melted <- melt(iris_cor)
+
+# Create the heatmap
+ggplot(iris_cor_melted, aes(x = Var1, y = Var2, fill = value)) +
+  geom_tile() +
+  scale_fill_gradient2(low = "blue", high = "red", mid = "white",
+                       midpoint = 0, limit = c(-1,1), space = "Lab",
+                       name="Correlation") +
+  theme_minimal() +
+  labs(title = "Correlation Heatmap of Iris Dataset Features") +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1,
+                                   size = 10, hjust = 1),
+        axis.title = element_blank())
+```
+
+```{r}
+library(tidyverse)
+library(readr)
+library(moments)
+
+bike_data = read.csv("C:/Users/coryg/Downloads/bike_buyers.csv", header=TRUE, na.strings ='')
+
+head(bike_data, 10)
+```
+
+
+Take a peek at some of the datatypes and observations. 
+
+```{r}
+str(bike_data)
+```
+Summarize the data with summary().
+
+```{r}
+summary(bike_data)
+```
+We can check levels of categorical features by using levels(). Note that prior to using levels(), your categorical feature must be converted to a factor datatype.
+
+```{r}
+bike_data$Marital.Status = as.factor(bike_data$Marital.Status)
+
+bike_data$Gender = as.factor(bike_data$Gender )
+
+bike_data$Home.Owner = as.factor(bike_data$Home.Owner)
+
+bike_data$Purchased.Bike = as.factor(bike_data$Purchased.Bike)
+
+levels(bike_data$Gender)
+```
+
+Now let's check for missing values, I've shown you one way to do this during data cleaning, here's another way to do the same thing.
+
+```{r}
+colSums(is.na(bike_data))
+```
+Prior to cleaning, let's visualize our data to see trends about some of the features' distributions that have missing values.
+
+```{r}
+ggplot(data = bike_data) +
+  geom_histogram(mapping = aes(x = Income), bins=15)
+
+ggplot(data = bike_data) +
+  geom_histogram(mapping = aes(x = Children))
+
+ggplot(data = bike_data) +
+  geom_histogram(mapping = aes(x = Cars))
+
+ggplot(data = bike_data) + 
+  geom_histogram(mapping = aes(x = Age), bins = 20)
+```
+
+Income and Age are continuous numerical features that are right skewed, hence the appropriate imputation method for missing values is median imputation.
+
+```{r}
+bike_data_clean = bike_data 
+
+bike_data_clean$Income[is.na(bike_data_clean$Income)] = median(bike_data_clean$Income, na.rm = TRUE)
+
+bike_data_clean$Age[is.na(bike_data_clean$Age)] = median(bike_data_clean$Age, na.rm = TRUE)
+```
+
+Now for the categorical variables, we'll replace the missing values with the most frequent categorical value, and you guessed it, this technique would be called mode imputation, very similar to how median and mean imputation works.
+
+For mode imputation, mode is not a built-in function, so we'll need to create it as a custom function.
+
+```{r}
+get_mode = function(x) {
+  unique_x = unique(x)
+  tabulation = tabulate(match(x, unique_x))
+  unique_x[tabulation == max(tabulation)]
+}
+```
+
+```{r}
+bike_data_clean$Marital.Status[is.na(bike_data_clean$Marital.Status)] = get_mode(bike_data_clean$Marital.Status)
+
+bike_data_clean$Gender[is.na(bike_data_clean$Gender)] = get_mode(bike_data_clean$Gender)
+
+bike_data_clean$Children[is.na(bike_data_clean$Children)] = get_mode(bike_data_clean$Children)
+
+bike_data_clean$Home.Owner[is.na(bike_data_clean$Home.Owner)] = get_mode(bike_data_clean$Home.Owner)
+```
+
+Now for Cars, let's try mean imputation.
+
+```{r}
+bike_data_clean$Cars[is.na(bike_data_clean$Cars)] = mean(bike_data_clean$Cars, na.rm = TRUE)
+```
+
+```{r}
+colSums(is.na(bike_data_clean))
+```
+Now how about some scatterplots between a couple categorical and numerical features? For example, maybe between gender and age...
+
+```{r}
+
+bike_data = bike_data_clean
+
+ggplot(data = bike_data, aes(x = Gender, y = Age)) +
+  geom_point()
+```
+
+This implies that females tend to be older bike owners that males.
+
+```{r}
+ggplot(data = bike_data, aes(x = Income, y = Age)) + geom_point()
+```
+
+Younger bike owners below the age of 50 tend to have less income than older bike owners. This can be justified equivalently in the colored scatterplot below.
+
+```{r}
+p3 <- ggplot(bike_data,
+             aes(x = Age,
+                 y = Income)) + 
+  theme(legend.position="top",
+        axis.text=element_text(size = 6))
+p4 <- p3 + geom_point(aes(color = Age),
+                       alpha = 0.5,
+                       size = 1.5,
+                       position = position_jitter(width = 0.25, height = 0))
+p4 +
+  scale_x_discrete(name="Income") +
+  scale_color_continuous(name="", low = "blue", high = "red")
+```
+
+Now another special plot used for an EDA against numerical and categorical features is a line plot.
+
+```{r}
+ggplot(data = bike_data) +
+  geom_line(mapping = aes(x = Age, y = Occupation))
+```
+
+To add another dimension to this, say gender, let's use our friend facet_wrap().
+
+```{r}
+ggplot(data = bike_data) +
+  geom_line(mapping = aes(x = Age, y = Occupation)) + facet_wrap(~Gender, ncol = 10)
+```
+
+Now let's look at some boxplots. For simplicity of this example in the notes, let's just do Income by Age.
+
+```{r}
+ggplot(data = bike_data, mapping = aes(x = Age, y = Income)) +
+  geom_boxplot()
+```
+
+Any outliers by Income? Let's detect them and filter them out from the dataset (alternatively you can cap your outliers if your dataset is considerably small).
+
+```{r}
+x = bike_data$Income
+Q1 = quantile(x, 0.25, na.rm = TRUE)
+Q3 = quantile(x, 0.75, na.rm = TRUE)
+IQR = Q3 - Q1
+
+outliers = x < (Q1 - 1.5*IQR) | x > (Q3 + 1.5*IQR)
+bike_data[outliers, ]
+```
+
+Dropping and checking to see if outliers were dropped.
+
+```{r}
+bike_data = bike_data[-c(7, 13, 44, 122, 179, 260, 322, 357, 830, 994),]
+
+nrow(bike_data_clean)
+nrow(bike_data)
+```
+
+Finally, let's take a look at PCA. For a simple example, we'll use the Iris dataset. Note that you'll need to remove categorical features prior to doing PCA.
+
+```{r}
+data(iris)
+iris_pca_data = iris[, -5]
+
+pca_result = prcomp(iris_pca_data, scale = TRUE)
+
+# View the standard deviations of the principal components
+
+print(pca_result$sdev)
+
+# View the rotation (loadings) matrix, showing how original variables contribute to PCs
+
+print(pca_result$rotation)
+
+# View the principal component scores for each observation
+
+print(pca_result$x)
+
+# Get a summary of the PCA results, including explained variance
+    
+summary(pca_result)
+```
+From these results, we can see that there are 4 principal components that were found, and the most variation within our data is explained by principal components 1 and 2. So starting with 4 features (4th dimensional data), we reduced our data to two new dimensions, namely principal components 1 and 2. To visualize the principal components, we can use the ggbiplot package.
+
+```{r}
+
+#install.packages("ggbiplot")
+library(ggbiplot)
+
+ggbiplot(pca_result, obs.scale = 1, var.scale = 1, ellipse = TRUE, circle = TRUE)
+```
+
+<br>

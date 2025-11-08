@@ -1,0 +1,238 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+### **Introductory SQL and Applications in R**
+
+We have seen how dplyr can transform and create datasets, but we have not unlocked the full potential of data engineering, a subdiscipline that all data scientists and analysts should learn to keep their skillset repertoires fresh. To do this, we will see how SQL can be utilized to extract, create, and transform datasets with SQL queries embedded in the R language.
+
+<br>
+
+### Database Fundamentals and Data Creation Using DDL
+
+To create data, we can use the DDL keywords that we learned from the conceptual lecture slides. Before we begin, we need to set some ground rules to set up our database connection.
+
+Note that database connections must always be established prior to query construction and must be appropriately closed afterwards. Think of this like opening a book, reading some chapters, and then closing the book once you're done.
+
+The database host we will be using for this class is SQLite which allows you to write SQL queries within your R code. I recommend taking a look at other good hosts such as Postgre SQL, Oracle SQL, and MySQL. These are excellent hosts that also can be used for database management, creation, and manipulation.
+
+```{r}
+
+# Make sure to install the RSQLite package prior to using it in your R session.
+
+# Then run the library and its Database interface (DBI) library.
+
+# install.packages("RSQLite")
+library(DBI)
+library(RSQLite)
+```
+
+Now we establish a connection with the database. dbname refers to the database name, and if it doesn't exist, it creates a new database with that name.
+
+```{r}
+connect4 = dbConnect(RSQLite::SQLite(),
+                     dbname = "example_database.db")
+```
+
+```{r}
+dbExecute(connect4, "
+          Create Table Students (
+          IDNumber Integer Primary Key,
+          FirstName Varchar(20),
+          LastName Varchar(20),
+          Age Integer,
+          GPA Real
+          );")
+```
+
+Let's insert some data into the Students Table.
+
+```{r}
+dbExecute(connect4, "
+          Insert Into Students (Firstname, LastName, Age, GPA) Values ('Daniel', 'Larusso', 30, 3.5);")
+
+dbExecute(connect4, "
+          Insert Into Students (Firstname, LastName, Age, GPA) Values ('Bryan', 'Mercado', 27, 4.00);")
+
+dbExecute(connect4, "
+          Insert Into Students
+          (Firstname, LastName, Age, GPA) Values ('Cory', 'Suzuki', 30, 3.67);")
+
+dbGetQuery(connect4, "
+           Select * From Students;")
+```
+
+Notice that dbExecute() executes your queries without displaying actual output and only displays how many rows were created or modified. Meanwhile, dbgetQuery() returns the results of your query in a dataframe format. 
+
+<br>
+
+### Database Data Insertion and Updates with DDL and DML
+
+Let's now try updating some of these values in our table. We'll update a particular student's GPA and update all StudentID's for existing students.
+
+```{r}
+
+# This query updates the GPA for the student with StudentID of 2.
+
+dbExecute(connect4, "
+          Update Students
+          Set GPA = 3.90
+          Where IDNumber = 2;")
+
+# This query updates all StudentID's to specific values for all rows. Note that to update all rows with unique StudentID's, we'll need to use the CASE WHEN THEN ELSE syntax as shown here.
+
+dbExecute(connect4, "
+          Update Students
+          Set IDNumber = Case
+          When IDNumber = 1 Then 025748
+          When IDNumber = 2 Then 078357
+          When IDNumber = 3 Then 510574
+          Else IDNumber
+          End
+          Where IDNumber In (1,2,3);")
+
+dbGetQuery(connect4, "
+           Select * From Students;")
+```
+
+Now here is an example of deleting a row of data.
+
+```{r}
+dbExecute(connect4, "
+          Delete From Students
+          Where IDNumber = 510574;")
+
+dbGetQuery(connect4, "
+           Select * From Students;")
+```
+
+Once you are done with your queries (or are stopping and will continue modifying the database later after saving your rmd file), make sure to close the connection to the database that you opened before. This ensures that your data is accurate (data integrity) and that all transactions from your queries are committed and not undone by the Database Interface within R.
+
+```{r}
+dbDisconnect(connect4)
+```
+
+### Joins, Joins, Joins, Everywhere
+
+Let's now practice on joining tables.
+
+```{r}
+
+```
+
+```{r}
+
+# The first two lines drop the tables used for this example to start fresh/debug tables.
+
+#dbExecute(connect1, "Drop Table Students;")
+#dbExecute(connect1, "Drop Table Faculty;")
+
+
+
+```
+
+Now let's join these tables with an Inner Join.
+
+```{r}
+
+```
+
+Now what happens when we do left and right joins?
+
+```{r}
+# Left join
+
+
+```
+
+```{r}
+# Right Join
+
+
+```
+
+Luckily since the IDNumber attributes in both the Students and Faculty tables match, no null values were produced when doing the left and right joins. This is the "perfect" scenario, but real life data isn't going to always be clean like this after doing joins. Let's close the connection and see some examples with some familiar datasets.
+
+```{r}
+
+```
+
+<br>
+
+### Applying SQL to Datasets
+
+Now let's further our SQL knowledge with some useful applications. We will be first referring to the mtcars built-in dataset. Let's set up a new connection that creates a new database called CarsDB.
+
+```{r}
+
+# Load in the mtcars dataset and ensure that the row names are represented by columns.
+
+
+```
+
+Before, we saw how to create tables using SQL the old fashioned way. Now to unleash the full power of SQL and R combined, let's make the mtcars dataframe into a database table using dbWriteTable(). To check all existing tables are created in your database, you can use dbListTables()
+
+```{r}
+
+```
+
+One cool thing you can do with SQLite is that you can append more dataframes to an existing table using a for loop. Here's an example.
+
+```{r}
+
+```
+
+And voila, we have combined the dataframes, put them as a list, and then used the append = TRUE parameter to append the data into one singular table.
+
+```{r}
+
+# The following query displays the first 10 rows of the mtcars table. It works just like head(mtcars, 10).
+
+
+```
+
+Now for some data retrieval with SQL. What if we wanted to return the car names and respective horsepowers of cars with 8 cylinders?
+
+```{r}
+
+```
+
+And how about retrieving the average horsepower and mpg by number of cylinder groups?
+
+```{r}
+
+```
+
+AVG() calculates the mean of a numerical attribute and 'average_hp' is called an alias, which is a way to reference the mean instead of calling AVG() every single time (similar to variable assignment in R). To save the results of your query, just assign the query to an object.
+
+```{r}
+library(tidyverse)
+
+cars_data = dbGetQuery(connect2, "
+           Select cyl, AVG(hp) as 'average_hp', AVG(mpg) as 'average_mpg'
+           From cars_data
+           Group By cyl
+           Order By average_hp;")
+
+# The below codes provide line plots with the x axis representing the number of cylinders and the y axis representing the average horsepower and average mpg respectively.
+
+ggplot(data = cars_data, aes(x = cyl, y = average_hp)) +
+  geom_line() + geom_point()
+
+ggplot(data = cars_data, aes(x = cyl, y = average_mpg)) +
+  geom_line() + geom_point()
+
+```
+
+```{r}
+
+```
+
+Based on the plots from the queried data, we can conclude that the average horsepower increases as the number of cylinders increase. In contrast, the average mpg decreases as the number of cylinders increase.
+
+This lecture is merely a taste of what you can do with the power of SQL and R implementations in example workflows. This will be especially helpful in industry if you are pulling data from databases to transform and analyze. In fact, there are many additional techniques such as creating indexes, window functions, and etc. 
+
+I recommend "The Language of SQL" by Larry Rockoff and "SQL for Data Scientists" by Renee Teate, as they are excellent references that provide a solid understanding of more advanced concepts and tricks. I can guarantee you that if you apply for data analyst, data scientist, or data engineering positions, more than likely you may be asked about SQL and queries during technical interviews.
+
+<br>

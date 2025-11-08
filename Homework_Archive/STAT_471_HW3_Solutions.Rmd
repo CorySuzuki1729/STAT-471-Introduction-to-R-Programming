@@ -1,0 +1,143 @@
+---
+title: "R Notebook"
+output:
+  html_document:
+    df_print: paged
+---
+
+### **Homework 3 Solutions**
+
+### Problem 1
+
+```{r}
+
+# (a)
+library(tidyverse)
+library(zoo)
+
+data("AirPassengers")
+
+ap_df <- data.frame(
+  Date = as.Date(as.yearmon(time(AirPassengers))),
+  Passengers = as.numeric(AirPassengers)
+)
+
+ggplot(ap_df, aes(x = Date, y = Passengers)) +
+  geom_line(color = "steelblue", linewidth = 1.2) +
+  labs(
+    title = "Monthly Airline Passenger Numbers (1949–1960)",
+    x = "Year",
+    y = "Number of Passengers (in thousands)"
+  ) +
+  theme_minimal(base_size = 14)
+```
+
+```{r}
+# (b)
+
+ggplot(ap_df, aes(x = Date, y = Passengers)) +
+  geom_line(color = "steelblue", linewidth = 1.2) +
+  geom_smooth(color = "black", level = 0.90) +
+  labs(
+    title = "Monthly Airline Passenger Numbers (1949–1960)",
+    x = "Year",
+    y = "Number of Passengers (in thousands)"
+  ) +
+  theme_minimal(base_size = 14)
+
+```
+
+(c) We can observe that the number of passengers increase exponentially between the years 1950 and 1960. This means that more airline tickets are purchased as the number of passengers increase. If we had access to concrete data on ticket sales, we would be able to analyze more accurately how many tickets are purchased and whether they are affected by the increase in the number of passengers.
+
+### Problem 2
+
+```{r}
+library(knitr)
+
+# (a)
+
+include_graphics("C:/Users/coryg/Downloads/UML_LBMem.jpg")
+```
+
+```{r}
+# (b)
+
+library(DBI)
+library(RSQLite)
+
+db_con = dbConnect(RSQLite::SQLite(),
+                   dbname = "hw3.db")
+
+dbExecute(db_con, "Drop Table Patients;")
+dbExecute(db_con, "Drop Table Nurses;")
+
+dbExecute(db_con, "
+          Create Table Patients(
+          IDNumber Integer Primary Key,
+          Age Integer,
+          Occupation Varchar(100) Not Null,
+          Height Integer,
+          Weight Real
+          );")
+
+dbExecute(db_con, "
+          Create Table Nurses(
+          NurseID Integer Primary Key,
+          IDNumber Integer,
+          Age Integer,
+          Years_Employed Integer,
+          Foreign Key (IDNumber) References Patients(IDNumber) 
+          );")
+
+dbListTables(db_con)
+```
+
+```{r}
+# (c)
+
+# Patients data insertion
+
+dbExecute(db_con, "
+          Insert Into Patients (IDNumber, Age, Occupation, Height, Weight) Values (12345, 55, 'Steel Worker', 65, 195.87);")
+
+dbExecute(db_con, "
+          Insert Into Patients (IDNumber, Age, Occupation, Height, Weight) Values (54321, 20, 'Cashier', 72, 203.22);")
+
+dbExecute(db_con, "
+          Insert Into Patients (IDNumber, Age, Occupation, Height, Weight) Values (24681, 34, 'Pilot', 63, 197.49);")
+
+dbExecute(db_con, "
+          Insert Into Patients (IDNumber, Age, Occupation, Height, Weight) Values (13579, 42, 'Professor', 70, 188.76);")
+
+dbExecute(db_con, "
+          Insert Into Patients (IDNumber, Age, Occupation, Height, Weight) Values (65729, 31, 'Plumber', 69, 176.71);")
+
+# Nurses table data insertion 
+
+dbExecute(db_con, "
+          Insert Into Nurses (NurseID, IDNumber, Age, Years_Employed) Values (6969, 12345, 25, 2);")
+
+dbExecute(db_con, "
+          Insert Into Nurses (NurseID, IDNumber, Age, Years_Employed) Values (3401, 54321, 42, 20);")
+
+dbExecute(db_con, "
+          Insert Into Nurses (NurseID, IDNumber, Age, Years_Employed) Values (1143, 24681, 33, 10);")
+
+dbExecute(db_con, "
+          Insert Into Nurses (NurseID, IDNumber, Age, Years_Employed) Values (2297, 13579, 32, 6);")
+
+dbExecute(db_con, "
+          Insert Into Nurses (NurseID, IDNumber, Age, Years_Employed) Values (8535, 65729, 44, 7);")
+
+dbGetQuery(db_con, "
+           Select * From Patients;")
+
+dbGetQuery(db_con, "
+           Select * From Nurses;")
+
+```
+```{r}
+dbDisconnect(db_con)
+```
+
+

@@ -1,0 +1,447 @@
+---
+title: "R Notebook"
+output:
+  html_document:
+    df_print: paged
+---
+
+###**Simulations of Distributions, the CLT, and the LLN**
+
+### Simulating Poisson Distributions
+
+```{r}
+# Generate 20 random variables from the Poisson distribution with lambda = 5, and do this for 50 random variables, and then finally for a large number
+
+set.seed(42)
+
+pois_data = rpois(20, 5)
+
+sim1_pois = rpois(50, 5)
+
+sim2_pois = rpois(1000, 5)
+
+# Histograms
+
+hist(pois_data, col = "red", xlab="values", ylab="frequencies", main="Histogram of P(5) for 20 Simulations")
+
+plot(density(pois_data), col="blue", lwd=2, 
+     main= "PDF of P(5) for 20 Simulations")
+
+hist(sim1_pois, col = "red", xlab="values", ylab="frequencies", main="Histogram of P(5) for 50 Simulations")
+
+plot(density(sim1_pois), col="blue", lwd=2, 
+     main= "PDF of P(5) for 50 Simulations")
+
+hist(sim2_pois, col = "red", xlab="values", ylab="frequencies", main="Histogram of P(5) for 10^3 Simulations")
+
+plot(density(sim2_pois), col="blue", lwd=2, 
+     main= "PDF of P(5) for 10^3 Simulations")
+```
+Both the histograms and density curves for each of the simulations are providing us a pattern.
+
+Some useful commands:
+```{r}
+# Continuing with the previous simulation, let's investigate the probabilities.
+
+# P(X<=2)
+
+ppois(2, 5)
+
+# P(X=1)
+
+dpois(1,5)
+
+# P(X<x) = 0.03368973 (Finding the quantile)
+
+qpois(0.03368973, 5)
+```
+Now let's check the parameters.
+
+```{r}
+mean(rpois(20,5))
+mean(rpois(50,5))
+mean(rpois(1000, 5))
+```
+The sample means are now converging (approaching) to the population mean of 5.
+
+<br>
+
+### Simulating Normal Distributions
+
+```{r}
+set.seed(42)
+
+norm_data = rnorm(20, mean=4, sd=3)
+
+sim1_norm = rnorm(50, mean=4, sd=3)
+
+sim2_norm = rnorm(1000, mean=4, sd=3)
+
+# Histograms
+
+hist(norm_data, col = "red", xlab="values", ylab="frequencies", main="Histogram of N(4,3) for 20 Simulations")
+
+plot(density(norm_data), col="blue", lwd=2, 
+     main= "PDF of N(4,3) for 20 Simulations")
+
+hist(sim1_norm, col = "red", xlab="values", ylab="frequencies", main="Histogram of N(4,3) for 50 Simulations")
+
+plot(density(sim1_norm), col="blue", lwd=2, 
+     main= "PDF of N(4,3) for 50 Simulations")
+
+hist(sim2_norm, col = "red", xlab="values", ylab="frequencies", main="Histogram of N(4,3) for 10^3 Simulations")
+
+plot(density(sim2_norm), col="blue", lwd=2, 
+     main= "PDF of N(4,3) for 10^3 Simulations")
+```
+
+```{r}
+# Checking parameter values
+
+mean(norm_data)
+mean(sim1_norm)
+mean(sim2_norm)
+```
+The two simulations of the Normal and Poisson distributions illustrate the magic of the CLT and LLN from a data-driven perspective. Let's take a look at some other practical examples.
+
+You can superimpose plots like so:
+```{r}
+set.seed(42)
+N = rnorm(1000, mean=50, sd=8)# simulate n=1000 from N(50,25)
+hist(N, probability=TRUE,col="red",main="Normal distribution")
+N.1 = seq(min(N), max(N), length=100)
+lines(N.1, dnorm(N.1, mean=50, sd=8))
+
+set.seed(512)
+x=rnorm(100,0,1)# real observations
+plot(density(x),main=" Simulated vs Real",lwd=2,xlim=c(-7,7),ylim=c(0,0.45))
+
+x1=rnorm(100,0.5,1.5)# simulate 100 observations from N(0.5,1.5)
+lines(density(x1),col="red",lwd=2)# plot x1
+
+x2=rnorm(100,1,1)#simulate 100 observations from N(1,1)
+lines(density(x2),col="blue",lwd=2)# plot x2
+
+x3=rnorm(100,3,3)#simulate 100 observations from N(3,3)
+lines(density(x3),col="green",lwd=2)# plot x3
+
+legend(-6,0.4,c("reale","Sim 1","Sim 2","Sim 3"),fill=c("black","blue","red","green"),box.col="white")
+```
+
+<br>
+
+### Simulating the CLT and LLN
+
+```{r}
+
+library(tidyverse)
+# Simulate sampling from a uniform distribution
+n_samples = 1000
+sample_size = 50
+uniform_samples = replicate(n_samples, 
+                             mean(runif(sample_size, 
+                                                   min = 0, max = 1)))
+
+# Create a data frame for plotting
+clt_data = data.frame(Sample_Mean = uniform_samples)
+
+# Plot using ggplot2
+ggplot(clt_data, aes(x = Sample_Mean)) +
+  geom_histogram(aes(y = ..density..),
+    bins = 30,
+    fill = "lightblue",
+    color = "black"
+  ) +
+  stat_function(
+    fun = dnorm, args = list(
+      mean = mean(uniform_samples),
+      sd = sd(uniform_samples)
+    ),
+    color = "red", size = 1
+  ) +
+  labs(
+    title = "Central Limit Theorem: Distribution of Sample Means",
+    x = "Sample Means",
+    y = "Density"
+  ) +
+  theme_minimal()
+```
+
+The above is the same pair of visualizations except with the ggplot package within the tidyverse package.
+
+<br>
+
+### Simulating Mixture Distributions: The Discrete Case
+
+```{r}
+
+set.seed(42)
+
+# Define the parameters of the discrete mixture distribution
+# Example: a mixture of two Poisson distributions
+
+# Component 1: Poisson with lambda = 2
+lambda1 = 2
+# Component 2: Poisson with lambda = 10
+lambda2 = 10
+
+# Mixture proportions
+# 70% from component 1, 30% from component 2
+mix_probs = c(0.7, 0.3)
+
+# Number of samples to generate
+n_samples = 1000
+
+# Initialize an empty vector to store the samples
+mixture_samples = numeric(n_samples)
+
+for (i in 1:n_samples) {
+  # Step 1: Choose a component based on mixture proportions
+  # sample() with prob argument selects an index based on the probabilities
+  chosen_component_index = sample(1:length(mix_probs), 1, prob = mix_probs)
+
+  # Step 2: Sample from the chosen discrete distribution
+  if (chosen_component_index == 1) {
+    mixture_samples[i] = rpois(1, lambda = lambda1) # Sample from Poisson 1
+  } else {
+    mixture_samples[i] = rpois(1, lambda = lambda2) # Sample from Poisson 2
+  }
+}
+
+# View the first few samples
+head(mixture_samples)
+
+# Visualize the distribution of the samples
+hist(mixture_samples, breaks = max(mixture_samples) + 1,
+     main = "Histogram of Discrete Mixture Samples",
+     xlab = "Value", ylab = "Frequency")
+```
+This example provides the density histogram for a mixture distribution between two Poisson distributions with the first lambda being 2 and the second lambda being 10. Here, we mix 70% of data from the first distributional component and the remaining 30% from the second distributional component. We display the first few samples that have been randomly generated from this new mixture distribution.
+
+<br>
+
+### Simulating Mixture Distributions: The Continuous Case Using Transformations
+
+```{r}
+# Chi-Square
+
+set.seed(42)
+
+n = 1000
+nu = 2
+X = matrix(rnorm(n*nu), n, nu)^2
+y = rowSums(X)
+mean(y)
+mean(y^2)
+```
+The above makes sense as the Chi-Squared distribution should have mean nu (2) and variance 2**nu (8) in terms of its theoretical parameters. The above approximates these well and simulate the Chi-square distribution with the sum of squared standard normal random variables.
+
+Here is an example of a mixture distribution of two Normals.
+
+```{r}
+n = 1000 # Number of samples
+mix_probs = c(0.6, 0.4) # Mixing probabilities
+means = c(0, 5) # Means of the two normal components
+sds = c(1, 1.5) # Standard deviations of the two normal components
+
+# Generate component labels
+component_labels = sample(1:2, size = n, replace = TRUE, prob = mix_probs)
+
+# Initialize vector for mixture samples
+mixture_samples = numeric(n)
+
+# Sample from each component based on labels
+for (i in 1:n) {
+  if (component_labels[i] == 1) {
+    mixture_samples[i] = rnorm(1, mean = means[1], sd = sds[1])
+  } else {
+    mixture_samples[i] = rnorm(1, mean = means[2], sd = sds[2])
+  }
+}
+
+# Plot histogram of the simulated mixture
+hist(mixture_samples, breaks = 30, main = "Simulated Mixture of Two Normals")
+```
+
+<br>
+
+### Simulating Distributions Using the Inverse Transformation Method
+
+The inverse CDF method can simulate distributions and their random samples by mapping samples taken from a Uniform(0,1) distribution to the input values of the original distribution's CDF. For example, suppose we have an Exponential distribution with lambda=2. The CDF for this distribution is 1-exp(-lambda*x), and its inverse is -ln(1-u) / lambda.
+
+```{r}
+set.seed(42)
+n = 10000
+lambda = 2
+
+# Step 1: Generate Uniform(0,1)
+u = runif(n)
+
+# Step 2: Apply inverse CDF
+x = -log(1 - u) / lambda
+
+# Compare with built-in exponential generator
+hist(x, probability=TRUE, col="skyblue", main="Exponential via Inverse Transform")
+curve(dexp(x, rate=lambda), add=TRUE, col="red", lwd=2)
+
+# Inspecting the first few newly sampled values.
+head(x)
+```
+
+```{r}
+# Binomial Distribution Example
+
+# Here, we use the inverse CDF method to generate random samples from the Binomial Distribution with success probability 0.3
+
+set.seed(42)
+
+N = 1000
+n = 20
+p = 0.3
+
+# Obtain binomial CDF
+
+x = 0:n
+bcdf = pbinom(x, size = n, prob = p)   
+
+# Generate uniformly distributed random number from U(0,1)
+
+u   = runif(N)                           
+idx = findInterval(u, bcdf) + 1  
+
+# Finding the smallest index j with F(x_j) >= u
+
+idx[idx > length(x)] = length(x)  
+
+X = x[idx]                            
+
+# PMF for comparison
+
+bpdf = dbinom(x, size = n, prob = p)
+
+# Plot: histogram (relative freq) vs pmf
+hist(X,
+     breaks = seq(-0.5, n + 0.5, 1),
+     probability = TRUE,
+     col = "grey", border = "white",
+     main = "Inverse-CDF sampling for Binomial(20, 0.3)",
+     xlab = "x")
+
+# Quick numeric check: empirical vs theoretical
+
+relfreq = prop.table(table(factor(X, levels = x)))
+
+cbind(empirical = as.numeric(relfreq), pmf = bpdf)
+```
+
+```{r}
+set.seed(1)
+
+# Parameters
+
+N     = 1000
+alpha = 3
+beta  = 2            
+
+# NOTE: this is 'scale' in R (rate = 1/beta)
+
+# True pdf/cdf
+
+x  = seq(0.01, 30, by = 0.01)
+y  = dgamma(x, shape = alpha, scale = beta)   
+
+# true density
+# Fast (analytic) CDF:
+
+mygam_cdf = pgamma(x, shape = alpha, scale = beta)
+
+## ---- Alternative: numeric CDF (slow; mirrors your integral loop) ----
+## Uncomment if you want to literally integrate each point.
+# mygam_cdf <- sapply(x, function(a)
+#   integrate(function(t) dgamma(t, shape = alpha, scale = beta), 0, a)$value)
+
+# Inverse-CDF sampling on the grid
+u   = runif(N)
+idx = findInterval(u, mygam_cdf) + 1          # first index with CDF >= u
+idx = pmin(idx, length(x))                    # guard when u ~ 1
+gamrv = x[idx]
+
+# Comparison sample using rgamma
+gam_rnd = rgamma(N, shape = alpha, scale = beta)
+
+# Plots
+
+op = par(mfrow = c(1, 2), mar = c(4,4,3,1))
+
+hist(gamrv, breaks = 15, probability = TRUE, col = "white",
+     border = "grey", main = "Gamma r.s. via inverse CDF (grid)",
+     xlab = "x", xlim = c(0, 30))
+
+hist(gam_rnd, breaks = 15, probability = TRUE, col = "white",
+     border = "grey", main = "Gamma r.s. via rgamma",
+     xlab = "x", xlim = c(0, 30))
+
+par(op)
+```
+
+<br>
+
+### Simulating Stochastic Processes
+
+```{r}
+
+library(tidyverse)
+
+#White Noise
+set.seed(2)
+w <- rnorm(500)
+plot(w,type='s')
+abline(h=0,col='red',lty=2,lwd=2)
+
+
+#Random Walk
+rw <- c(0)
+for(i in 2:500){
+  rw[i] <- rw[i-1]+sample(c(-1,1),1)
+}
+plot(rw,type='s')
+abline(h=0,col='red',lty=2,lwd=2)
+
+
+#White Noise Moving average
+
+w3 <- stats::filter(w, filter = rep(1/3, 3), sides = 2) 
+plot(w,type='s')
+abline(h=0,col='red',lty=2,lwd=2)
+lines(w3, col = "blue")
+
+#White Noise Autoregressive
+war <- stats::filter(w, filter =c(1,-0.9), method = "recursive")
+plot(w,type='s', ylim=c(-6,6))
+abline(h=0,col='red',lty=2,lwd=2)
+lines(war, col = "blue")
+```
+
+The above four simulations are of Gaussian white noise, a random walk, a Moving Average with Gaussian White Noise, and an Autoregressive Stochastic Process with Gaussian White Noise. These models can model basic signals (signal processing applications such as seismic detection and stock market fluctuations). We'll see some of these return when we do an introductory formal analysis of time series with real data.
+
+<br>
+
+### Monte Carlo Simulation Example: Approximating Pi
+
+Monte Carlo sampling methods are the backbone for many Bayesian statistical methodologies and for today's growing complexity of Machine Learning models. Here, we'll take a look at a simple, fun example to approximate pi. We'll do this by sampling two times from the U(-0.5, 0.5) distribution and calculating the ratio of samples within a circle of radius 0.5 within a unit square divided by the total number of samples. Our approximation increases in precision as more samples are ran (think of the CLt and LLN theorems playing a role here).
+
+```{r}
+set.seed(123)
+runs = 100000
+#runif samples from a uniform distribution
+xs = runif(runs,min=-0.5,max=0.5)
+ys = runif(runs,min=-0.5,max=0.5)
+in.circle = xs^2 + ys^2 <= 0.5^2
+mc.pi = (sum(in.circle)/runs)*4
+plot(xs,ys,pch='.',col=ifelse(in.circle,"blue","grey")
+     ,xlab='',ylab='',asp=1,
+     main=paste("MC Approximation of Pi =",mc.pi))
+```
+
+
+<br>

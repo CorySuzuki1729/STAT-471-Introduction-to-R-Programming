@@ -1,0 +1,305 @@
+---
+title: "R Notebook"
+output:
+  html_document:
+    df_print: paged
+---
+
+### Acceptance-Rejection Method for Sampling and Introduction to Monte Carlo Markov Chain Methods
+
+We have seen many sampling and resampling methods in this course applied to many types of problems, such as for simulating distributions and obtaining samples that can be hard to compute. Another popular method is called acceptance-rejection sampling, in which we implement the algorithm here and provide a few examples.
+
+In the following example, we generate 1000 Beta(2, 2)-distributed random variables.
+
+```{r}
+set.seed(42)
+n <- 1000
+k <- 0 #counter for accepted
+j <- 0 #iterations
+y <- numeric(n)
+while (k < n) {
+u <- runif(1)
+j <- j + 1
+data <- runif(1) #random variate from g
+if (data * (1-data) > u) {
+#we accept x
+k <- k + 1
+y[k] <- data
+}
+}
+
+head(y)
+
+hist(y, freq=FALSE, xlab = "Samples", ylab = "Density", main="Samples from Beta(2,2) Using Accept-Reject Method")
+curve(dbeta(x, 2, 2), add=TRUE, col="red", lwd=2)
+
+```
+
+<br>
+
+### Monte Carlo Markov Chains (MCMC)
+
+As discussed, a large sampling of Markov Chains can aid in generating samples from distributions and data. The idea here is that we generate a large amount of Markov Chains using a prior distribution in order to obtain the posterior distribution, where we can get our samples from. If we take the mean and variance of the steady state distribution from the prior, then by asymptotic large sample theory, we know that the mean of the chains can estimate the true population/theoretical mean. Usually, a uniform prior, namely U(0,1) which is known as Jeffrey's Prior, is a good candidate prior to use, however for different problems, you may want to consider beta or gamma prior distributions.
+
+Here's an actual example. Suppose we want to sample from the Beta(a,b) distribution using a Uniform prior, U(0,1).
+
+```{r}
+# Metropolis–Hastings for Beta(a,b) with Uniform(0,1) proposal
+mh_beta <- function(n, a, b, x0 = runif(1), burn = 1000L, thin = 1L, seed = NULL) {
+  if (!is.null(seed)) set.seed(seed)
+  stopifnot(a > 0, b > 0)
+  Ntot <- burn + n * thin
+  x <- numeric(Ntot)
+  x[1] <- min(max(x0, .Machine$double.eps), 1 - .Machine$double.eps)  # clamp to (0,1)
+  acc <- 0L
+
+  # log unnormalized target: (a-1)log x + (b-1)log(1-x)
+  logf <- function(z) {
+    if (z <= 0 || z >= 1) return(-Inf)
+    (a - 1) * log(z) + (b - 1) * log1p(-z)
+  }
+
+  for (t in 2:Ntot) {
+    y <- runif(1)                          # independent Uniform(0,1) candidate
+    log_alpha <- logf(y) - logf(x[t - 1])  # q cancels; constants cancel
+    if (log(runif(1)) < log_alpha) {
+      x[t] <- y
+      acc <- acc + 1L
+    } else {
+      x[t] <- x[t - 1]
+    }
+  }
+
+  kept <- x[(burn + 1):Ntot]
+  if (thin > 1) kept <- kept[seq(1, length(kept), by = thin)]
+
+  list(
+    draws = kept,
+    accept_rate = acc / (Ntot - 1),
+    a = a, b = b, burn = burn, thin = thin
+  )
+}
+
+# Calling the function
+out <- mh_beta(n = 20000, a = 2.5, b = 7.5, burn = 2000, seed = 123)
+
+cat(sprintf("Acceptance rate: %.2f%%\n", 100 * out$accept_rate))
+
+# Quick checks: histogram vs true Beta density
+op <- par(mfrow = c(1, 1))
+hist(out$draws, breaks = 60, freq = FALSE, main = "MH samples vs Beta(2.5, 7.5)",
+     xlab = "x")
+curve(dbeta(x, 2.5, 7.5), add = TRUE, lwd = 2)
+par(op)
+
+# Summary stats should be close to Beta moments:
+# E[X] = a/(a+b), Var[X] = ab / [(a+b)^2 (a+b+1)]
+mean(out$draws)
+var(out$draws)
+```
+
+Note that the burn parameter in our Metropolis-Hastings Sampler "burns in" or discards a portion of our Markov Chain samples. This is done since in MCMC, these chains don't start start at their true equilibrium distribution, and hence are not great in representing the posterior distribution.
+
+Now for another example, let's use a Metropolis-Hastings sampler and a special case of the MH Sampler (Random Walk Sampler) to sample from a Beta distribution. Here, we will use the Bernoulli distribution as the candidate for the prior distribution.
+
+```{r}
+set.seed(123)
+
+## Generate a r.s. of size 100 from Ber(0.2)
+n <- 100
+u <- runif(n)
+X_ber <- as.numeric(u <= 0.2)
+ber_sum <- sum(X_ber)
+
+## Use Metropolis–Hastings sampler to generate size 2000 Markov Chain
+n_markov <- 2000
+likelihood <- function(theta, n, sumx) theta^sumx * (1 - theta)^(n - sumx)
+
+X_metha <- numeric(n_markov)
+X_metha[1] <- runif(1)
+acc_rate <- 0L
+
+half_step <- 0.5 / sqrt(12)  # same as MATLAB code
+
+for (i in 1:(n_markov - 1)) {
+  upper <- min(1, X_metha[i] + half_step)
+  lower <- max(0, X_metha[i] - half_step)
+  y <- runif(1, lower, upper)
+  num <- likelihood(y, n, ber_sum)
+  den <- likelihood(X_metha[i], n, ber_sum)
+  acc_prob <- min(1, num / den)
+  if (runif(1) <= acc_prob) {
+    X_metha[i + 1] <- y
+    acc_rate <- acc_rate + 1L
+  } else {
+    X_metha[i + 1] <- X_metha[i]
+  }
+}
+
+## Mean and variance of Markov chain after burn-in (drop first 500)
+acc_rate1 <- acc_rate / n_markov
+X_metha2 <- X_metha[501:length(X_metha)]
+mean_first <- mean(X_metha2)
+var_first  <- var(X_metha2)
+
+cat(sprintf("MH(chain on theta) acceptance rate: %.2f%%\n", 100 * acc_rate1))
+cat(sprintf("Mean (post burn-in): %.6f\n", mean_first))
+cat(sprintf("Var  (post burn-in): %.6f\n\n", var_first))
+
+## Generate Beta(sum+1, n-sum+1) using a random-walk MH 
+n_beta <- length(X_metha2)
+X_beta <- numeric(n_beta)
+X_beta[1] <- runif(1)
+acc_rate2 <- 0L
+
+for (i in 1:(n_beta - 1)) {
+  cand <- X_beta[i] + runif(1, -0.5, 0.5) / sqrt(12)
+  cand_y <- max(min(cand, 1), 0)  # clamp to [0,1]; MATLAB only used max(.,0) but [0,1] is safer
+  num_beta <- dbeta(cand_y, ber_sum + 1, n - ber_sum + 1)
+  den_beta <- dbeta(X_beta[i], ber_sum + 1, n - ber_sum + 1)
+  acc_prob2 <- min(1, num_beta / den_beta)
+  if (runif(1) <= acc_prob2) {
+    X_beta[i + 1] <- cand_y
+    acc_rate2 <- acc_rate2 + 1L
+  } else {
+    X_beta[i + 1] <- X_beta[i]
+  }
+}
+
+X_beta2 <- X_beta[501:length(X_beta)]
+acc_rate_beta <- acc_rate2 / n_beta
+mean_second <- mean(X_beta2)
+var_second  <- var(X_beta2)
+
+cat(sprintf("MH(random-walk on Beta target) acceptance rate: %.2f%%\n", 100 * acc_rate_beta))
+cat(sprintf("Mean (post burn-in): %.6f\n", mean_second))
+cat(sprintf("Var  (post burn-in): %.6f\n", var_second))
+
+## Histogram comparison
+op <- par(mfrow = c(1, 2))
+hist(X_metha2, breaks = 30, freq = TRUE, col = "white",
+     main = "Metropolis–Hastings Sampler", xlab = expression(theta))
+hist(X_beta2, breaks = 30, freq = TRUE, col = "lightblue",
+     main = "Random Walk Sampler", xlab = "beta draws")
+par(op)
+```
+
+### Gibbs Sampler
+
+Now the Gibbs Sampler is an extension of the Metropolis-Hastings sampler algorithm, however this sampler is better for drawing random samples from multivariate distributions. 
+
+```{r}
+set.seed(123)
+
+## Set up constants and arrays.
+n    <- 1000
+xgibbs <- matrix(0, nrow = n, ncol = 2)
+mu     <- c(3, 2)
+vars   <- c(1.5, 1.0)
+stv    <- sqrt(vars)
+
+## You encoded covariance = 0.6; correlation = cov / (s1*s2)
+rho <- 0.6 / prod(stv)   # correlation used in conditionals
+
+## Initial point.
+x0 <- rnorm(1, mean = mu[1], sd = stv[1])
+y0 <- rnorm(1, mean = mu[2] + rho * (stv[2] / stv[1]) * (x0 - mu[1]),
+            sd   = stv[2] * sqrt(1 - rho^2))
+
+xgibbs[1, ] <- c(x0, y0)
+
+## Start the chain.
+for (i in 2:n) {
+  mean1 <- mu[1] + rho * (stv[1] / stv[2]) * (xgibbs[i - 1, 2] - mu[2])
+  sd1   <- stv[1] * sqrt(1 - rho^2)
+  xgibbs[i, 1] <- rnorm(1, mean1, sd1)
+
+  mean2 <- mu[2] + rho * (stv[2] / stv[1]) * (xgibbs[i, 1] - mu[1])
+  sd2   <- stv[2] * sqrt(1 - rho^2)
+  xgibbs[i, 2] <- rnorm(1, mean2, sd2)
+}
+
+## Burn-in and MCMC summaries
+burn <- floor(n * 0.1)
+nMC  <- n - burn
+MCx  <- xgibbs[(burn + 1):n, 1]
+MCy  <- xgibbs[(burn + 1):n, 2]
+
+MCxmean <- mean(MCx); MCxsd <- sd(MCx)
+MCymean <- mean(MCy); MCysd <- sd(MCy)
+MCcorr  <- cor(MCx, MCy)
+
+cat(sprintf("MCx mean=%.4f, sd=%.4f\n", MCxmean, MCxsd))
+cat(sprintf("MCy mean=%.4f, sd=%.4f\n", MCymean, MCysd))
+cat(sprintf("corr(MCx, MCy)=%.4f\n", MCcorr))
+
+## --- PLOTS ---
+
+## Helper to reproduce your binning (histc-like) and bar heights = counts/nMC
+plot_hist_like <- function(z, main, xlim = c(-2, 8), ylim = c(0, 0.3)) {
+  h   <- 2.15 * sqrt(var(z)) * nMC^(-1/5)
+  t0  <- min(z) - 0.05
+  tm  <- max(z) + 0.05
+  bins <- seq(t0, tm, by = h)
+  # Use hist() to get counts per bin; mimic histc style then drop last
+  hz <- hist(z, breaks = bins, plot = FALSE, right = TRUE, include.lowest = TRUE)
+  vk <- hz$counts
+  if (length(vk) > 0) vk[length(vk)] <- 0  # mimic vk(end)=[] in MATLAB (drop last)
+  fhat1 <- vk / nMC
+  bc <- seq(t0 + h/2, tm - h/2, by = h)
+
+  # Draw custom bar rectangles at midpoints bc with width h and height fhat1
+  plot(NA, xlim = xlim, ylim = ylim, xlab = "", ylab = "", main = main)
+  if (length(bc) > 0) {
+    rect(bc - h/2, 0, bc + h/2, fhat1, col = "white", border = "black")
+  }
+}
+
+# Helper Function for Plotting
+
+plot_hist_like <- function(z, main, xlim = c(-2, 8), ylim = c(0, 0.3)) {
+  stopifnot(length(z) > 0, all(is.finite(z)))
+  n   <- length(z)
+  s2  <- var(z)
+  # Guard against zero variance (flat series)
+  if (!is.finite(s2) || s2 <= 0) s2 <- (diff(range(z))^2) / 12
+
+  h   <- 2.15 * sqrt(s2) * n^(-1/5)
+  if (!is.finite(h) || h <= 0) h <- max( (diff(range(z)) / 30), 1e-6 )
+
+  r   <- range(z, finite = TRUE)
+  t0  <- r[1] - 0.05
+  tm  <- r[2] + 0.05
+
+  # Ensure last break strictly exceeds max(z) to avoid "some 'x' not counted"
+  breaks <- seq(t0, tm + h, by = h)
+  if (tail(breaks, 1) <= tm) breaks <- c(breaks, tm + 1e-9)
+
+  hz <- hist(z, breaks = breaks, plot = FALSE,
+             include.lowest = TRUE, right = FALSE)
+
+  # Heights as counts/n (to mirror your MATLAB normalization)
+  heights <- hz$counts / n
+
+  plot(NA, xlim = xlim, ylim = ylim, xlab = "", ylab = "", main = main)
+  rect(hz$breaks[-length(hz$breaks)], 0,
+       hz$breaks[-1], heights,
+       col = "white", border = "black")
+}
+
+# Figure 1: MCx series and histogram-like bar plot
+
+plot(MCx, type = "l", xlab = "", ylab = "", main = "MCx trace")
+plot_hist_like(MCx, main = "MCx bar (counts/n)")
+
+# Figure 2: MCy series and histogram-like bar plot
+
+plot(MCy, type = "l", xlab = "", ylab = "", main = "MCy trace")
+plot_hist_like(MCy, main = "MCy bar (counts/n)")
+
+# Figure 3: Scatter plot of (MCx, MCy)
+
+plot(MCx, MCy, pch = 8, xlab = "MCx", ylab = "MCy", main = "Posterior draws")
+```
+
+<br>

@@ -1,0 +1,263 @@
+---
+title: "R Notebook"
+output:
+  html_document:
+    df_print: paged
+---
+
+### Introduction to Time Series Analysis
+
+Our last topic in the course, and a very special one, is on an elementary introduction to the formal analysis of time series data. Time series analysis along with machine learning are some of the topics I am most interested in (and incorporated into my graduate research). For the sake of brevity and simplicity, I won't go too much into theory but heavily show the applications of time series analysis using R.
+
+In this lecture, we require the following libraries.
+```{r}
+library(readr)
+library(tseries)
+library(astsa)
+library(forecast)
+library(MTS)
+```
+
+<br>
+
+### Diagnosing Stationarity and Seasonality in Your Time Series Data
+
+Recall that stationarity means that a time series' distribution does not depend on time, and hence converges without making too much noise (little to no variation). Many time series forecasting models depend on the idea of being stationarity, so our motivation here is, how do we exactly diagnose stationarity?
+
+To diagnose stationarity in your time series data, we can use two approaches: (1) conduct the ADF and/or KPSS hypothesis tests or (2) check the Autocorrelation Plot (ACF) and visually inspect if your ACF values shrink to the horizontal asymptote. The Partial Autocorrelation (PACF) is helpful to have to especially when performing modeling procedures as you'll see. We will demonstrate both methods here with the Air Passengers dataset which we have seen before.
+
+```{r}
+data("AirPassengers")
+dataset = AirPassengers
+plot(dataset, main="AirPassengers Time Series", ylab="Number of Passengers", xlab="Year")
+```
+
+To check for the seasonality, we can decompose the time series into its different components. We'll be able to see the original observed series, the general trend plot, the seasonality component, and the residual plot of the series.
+
+Additive decomposition is good for when your time series has constant variation in seasonality while multiplicative is better when your seasonality's variation increases or descreases significantly over time.
+
+```{r}
+plot(decompose(dataset, type='additive'))
+plot(decompose(dataset, type='multiplicative'))
+```
+
+Now for the ACF and PACF Plots...
+```{r}
+acf(dataset, main="ACF Plot of Air Passengers Data")
+pacf(dataset, main="PACF Plot of Air Passengers")
+
+# ADF and KPSS Hypothesis Tests for Stationarity
+
+adf.test(dataset)
+kpss.test(dataset)
+```
+
+Off the bat, we notice that our methods are telling us that our time series isn't quite stationary (our Hypothesis Tests say otherwise but visually we're not fooled; this is why sometimes the Frequentist view of Statistics can be lacking since our tests here aren't picking up the seasonal trends as indicated by the original plot), so we will smooth the data by "differencing" the series between each time lag. This preserves the overall information of the data but modifies the structure so we can easily gain insights about the data by subtracting the time steps in between. You can use diff() to difference time series data. Usually once or twice for differencing does the trick.
+
+```{r}
+diff1_pass = diff(log(dataset), differences=1)
+
+```
+
+Now let's rerun the ACF and PACF Plots.
+
+```{r}
+plot(diff1_pass, main="Differenced AirPassengers Time Series", ylab="Number of Passengers", xlab="Year")
+
+acf(diff1_pass, main="ACF Plot of 1st Difference of Air Passengers Data")
+pacf(diff1_pass, main="ACF Plot of 1st Difference of Air Passengers Data")
+
+```
+
+Since there's not much change in the plots, it looks like differencing either once or twice is okay here and this is the best we can do to make the data stationary.
+
+Much better! Not too bad, right? Now let's take it a step further and look at how to model time series data with basic types of models.
+
+<br>
+
+### Different Types of Basic Time Series Models
+
+Without going into the nitty-gritty theory of the models, here are just some examples of how to implement them. We'll introduce Auto-Regressive models (AR), Moving Averages (MA), Auto-Regressive Moving Averages (ARMA), Auto-Regressive Integrated Moving Averages (ARIMA), and Seasonal ARIMA (SARIMA). Most of these models require the assumption of stationarity and the coefficients should be in between -1 and 1 (otherwise your series explodes into infinity) For simplicity, I do not plan on covering time series models for modeling variation (ARCH and GARCH) in time series data, as that's another type of wild animal that you want to keep in the zoo. if you want to look more into those models, please either consult "Practical Time Series Analysis" by Aileen Nielsen or look into STAT 580.
+
+Postscript Note: While STAT 580 covers the theory well, if you want a practical, hands-on perspective of how time series analysis is done in R, MATH 531T at CSUF is a solid class. Much of the code in this lecture notebook is inspired by that class with a few of my own twists.
+
+<br>
+
+### Auto-Regressive
+
+An AR(p) model is a type of model that regresses upon itself with the past values indexed by time. This means that the AR model averages amongst every previous observation. To illustrate how this works, we'll use the cmort dataset which models cardiovascuular mortalities reported between 1970 and 1979.
+
+Normally, to determine the best order for the AR(p) model, we can look at the PACF plot and look for the time lag where the value drops to 0. Here, it looks like order 2 is our magic number.
+
+```{r}
+data(cmort)
+pacf(cmort, main="Cmort PACF")
+ar2_ols = ar.ols(cmort, order = 2, demean = F, intercept = T)
+print(ar2_ols$x.intercept)
+ts.plot(cmort, main = "AR(2) Plot with Intercept")
+ar2_fit_cmort = cmort - residuals(ar2_ols)
+points(ar2_fit_cmort, type = "l", col = 2, lty = 2)
+```
+
+Here, we can see that the fitted AR(2) model fits the dataset well, so thanks to the PACF for the hint!
+
+<br>
+
+### Moving Average
+
+The difference with the MA(q) model is that the averages are computed with respect to the previous residual of the time series instead of using the actual data values which AR(p) does. To show how to plot MA(q) models, we will use the general ARIMA(p,d,q) model to illustrate a special relationship between AR and MA models.
+
+Similar to how we did in the AR case, the order q of a MA(q) model is determined by looking at the significant drop in the ACF of the time series.
+
+```{r}
+ma_data = arima.sim(n=100, model=list(order=c(0,0,1), ma= 0.7))
+
+acf(ma_data)
+
+ma1_model = arima(ma_data, order=c(0,0,1))
+
+ts.plot(ma_data, main = "MA(1) Plot")
+ma1_fit = ma_data - residuals(ma1_model)
+points(ma1_fit, type = "l", col = 2, lty = 2)
+```
+
+Evidently, the simulated data was from an MA(1) dataset, and the ACF supports that in the case q was unknown, the right order to use would be 1 for modeling.
+<br>
+
+### Auto-Regressive Moving Average (ARMA)
+
+Now this one is self-explanatory. The ARMA(p,q) model is a combination of both the AR(p) and MA(q) models. Finding the orders is similar to before, except this time we look at both the ACF and PACF plots to respectively determine p and q.
+
+For simplicity, assume that we found p and q to be 1 and 1. 
+
+```{r}
+n = 100
+arma11 = arima.sim(n = 100, list(ar=0.6, ma=0.9))
+ 
+arma11_fit = arima(arma11, order = c(1,0,1))
+
+ts.plot(arma11, main = "ARMA(1,1) Model")
+
+arma11_fitted = arma11- residuals(arma11_fit)
+
+points(arma11_fitted, type = "l", col = 2, lty = 2)
+```
+
+<br>
+
+### Auto-Regressive Integrated Moving Average (ARIMA)
+
+Now the ARIMA model can be considered the "parent model" and hence why in the study of time series, these models are referred to as ARIMA modeling. The difference between an ARMA(p,q) and ARIMA(p,d,q) model is that the ARIMA model doesn't require stationary upfront as the d parameter controls the differencing of your time series, this is known as the Integrated component which links the AR and MA parts together.
+
+```{r}
+arima_data = arima.sim(n=100, model=list(order=c(1,1,0), ar=0.7))
+
+arima_fit = arima(arima_data, order=c(1,1,0))
+
+ts.plot(arima_data, main = "ARIMA(1,1,0) Model")
+
+arima_fitted = arima_data - residuals(arima_fit)
+
+points(arima_fitted, type = "l", col = 2, lty = 2)
+```
+
+If you were observant enough, note that an ARIMA(1,0,0) is the same as a AR(1) model, ARIMA(0,0,1) is the same as a MA(1) model, and ARIMA(1,0,1) is the same as a ARMA(1,1). Pretty cool!
+
+<br>
+
+### Seasonal Auto-Regressive Integrated Moving Average
+
+Now for seasonal data, we can use the SARIMA(p,d,q)(P,D,Q)[s], where p,d,q refer to the non-seasonal AR and MA components while P,D,Q refer to the seasonal AR and MA components. s a new parameter that specifies the seasonal periodicity of your time series. For example, if your time series has seasonality every year, your s might be 12.
+
+These are a lot of parameters to keep track of, so for practiciality, the auto.arima() function is powerful in that it finds the best ARIMA/SARIMA model for your time series data by finding the model with the lowest corrected AIC.
+
+Now let's try modeling that AirPassengers dataset and handle its seasonality. Trace is an optional argument that can keep track of each iteratively fitted model.
+
+```{r}
+sarima_mod = auto.arima(dataset, seasonal=TRUE, trace=TRUE)
+sarima_mod
+```
+Now after obtaining the best model, let's try forecasting (making predictions for data extrapolation for future time steps).
+
+```{r}
+forecasted_values = forecast(sarima_mod, h=12)
+plot(forecasted_values)
+```
+
+Very neat, this is usually my personal favorite part of time series in making reasonable predictions with your time series models.
+
+Before we conclude the semester of STAT 471, let's take a look at some special data mining techniques for time series (theory of these techniques covered in STAT 574).
+<br>
+
+### Anomaly and Change Point Detection of Time Series Using R
+
+To perform anomaly/outlier detection, we use the anomalize library in R. To perform change point detection (sudden changes in mean and variance trends), we use the 
+
+As an example, we'll use the Yahoo Finance API in R to fetch some time series data on crude oil stocks and detect anomalies.
+
+```{r}
+library(yahoofinancer)
+
+crude.oil <- Ticker$new('CL=F')
+crudeoil<- crude.oil$get_history(start = '2021-03-09', 
+end = '2025-03-06', interval = '1d')
+
+crudeoil$date<- substr(as.POSIXct(strftime(crudeoil$date, 
+format="%Y-%m-%d %H:%M:%S"), format = "%Y-%m-%d", tz=""), 1, 10)
+
+crudeoil.data<- as.data.frame(list(crudeoil$date, round(crudeoil$close,2)),
+col.names=c("Date", "Close"), make.names=FALSE)
+
+crudeoil.data<- na.omit(crudeoil.data)
+
+crudeoil.data$Date<- as.Date(crudeoil.data$Date, format="%Y-%m-%d")
+
+#RUNNING ANOMALY DETECTION ANALYSIS
+library(tibbletime) #creates indices for date in time series data
+crudeoil.data_tbl <- as_tbl_time(crudeoil.data, Date)
+
+library(anomalize) 
+library(tidyverse)
+crudeoil.data_tbl %>% time_decompose(Close, method="stl") %>% 
+anomalize(remainder, method="iqr", alpha=0.07) %>% time_recompose() %>% 
+plot_anomalies(time_recomposed=TRUE, color_no='navy', 
+color_yes='red',fill_ribbon='gray', size_circles=4) + 
+labs(title="Anomalies in Daily Closing Prices of Crude Oil", 
+subtitle="3/8/2021-3/6/2025") 
+```
+
+Here, we can see that outliers can be detected in time series data (traditionally the IQR threshold criterion is used). Now how about for change point detection?
+
+```{r}
+#RUNNING CHANGE-POINT DETECTION ANALYSIS
+library(changepoint)
+ansmean<- cpt.mean(crudeoil.data$Close, penalty="AIC", method="BinSeg", Q=3)
+plot(ansmean,lwd=2, cpt.col="red", cpt.width=3, ylab="Daily Closing Price", 
+main="Change Point Detection for Change in Mean")
+print(ansmean)
+
+ansvar<- cpt.var(crudeoil.data$Close, penalty="AIC", method="BinSeg", Q=3)
+plot(ansvar, lwd=2, cpt.col="green", cpt.width=3, ylab="Daily Closing Price", 
+main="Change Point Detection for Change in Variance")
+print(ansvar)
+
+ansmeanvar<- cpt.meanvar(crudeoil.data$Close, penalty="AIC", method="BinSeg", Q=3)
+plot(ansmeanvar, lwd=2, cpt.col="blue", cpt.width=3, ylab="Daily Closing Price", 
+main="Change Point Detection for Change in Mean and Variance")
+print(ansmeanvar)
+```
+
+<br>
+
+### Bonus: Advanced Forecasting Techniques with Neural Network Auto-Regression (NNETAR)
+
+We saw forecasting done in the time series regression sense, and a neat advanced forecasting technique is by using an Artificial Neural Network to perform Neural Network Autoregression. Here, the previous time steps/lags are the inputs to the neural network, and it learns on how to best perform autoregression on the data to make predictions about the future. More information can be found in "Forecasting: Principles and Practice" by Hyndman and Athanasopoulos. 
+
+Note that for the Air Passengers example, a NNAR(1,1,2)[12] model is the approximated equivalent to the SARIMA model we got from auto.arima(). Here, lambda is set to 0 to that a Box-Cox transformation is applied to ensure our forecasted values stay positive.
+
+```{r}
+nn_fit = nnetar(dataset, lambda=0)
+autoplot(forecast(nn_fit, h=20))
+```
+
+<br>
